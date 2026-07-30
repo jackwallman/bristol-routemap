@@ -56,6 +56,11 @@ Three layers:
   Bristol's DCAT feed for "liveable"). Assembly script isn't checked in — see git history for the
   Overpass queries and stitching approach if this needs rebuilding.
 
+  If you do rebuild it, the ring must come out **simple** — no vertex visited twice, no crossing
+  segments. Stitching OSM ways naturally leaves out-and-back spurs where the trace runs up a side
+  road and returns; MapLibre's fill tessellator turns each of those into a stray triangle streaking
+  across the polygon. Cut the spurs before committing.
+
 ## Adding/updating a project
 
 ### Rule 1 — it must improve mobility around the city
