@@ -125,15 +125,23 @@ export function MapView({
             "match",
             ["get", "R_STATUS"],
             "Existing",
-            "#1565c0",
+            "#9ec9e8",
             ["Proposed", "Planned"],
-            "#ef6c00",
+            "#f57c00",
             "Aspirational",
-            "#9e9e9e",
-            "#1565c0",
+            "#c2c2c2",
+            "#9ec9e8",
           ],
-          "line-width": ["match", ["get", "R_STATUS"], "Existing", 3.5, 2.5],
-          "line-opacity": ["match", ["get", "R_STATUS"], "Aspirational", 0.5, 0.85],
+          "line-width": ["match", ["get", "R_STATUS"], ["Proposed", "Planned"], 4, "Existing", 1.5, 1.25],
+          "line-opacity": [
+            "match",
+            ["get", "R_STATUS"],
+            ["Proposed", "Planned"],
+            0.95,
+            "Aspirational",
+            0.35,
+            0.6,
+          ],
           "line-dasharray": ["match", ["get", "R_STATUS"], "Existing", ["literal", [1, 0]], ["literal", [2, 1.5]]],
         },
         layout: { visibility: "none" },
@@ -197,14 +205,14 @@ export function MapView({
             id: `${sourceId}-fill`,
             type: "fill",
             source: sourceId,
-            paint: { "fill-color": color, "fill-opacity": 0.2 },
+            paint: { "fill-color": color, "fill-opacity": 0.28 },
             layout: { visibility },
           });
           map.addLayer({
             id: `${sourceId}-outline`,
             type: "line",
             source: sourceId,
-            paint: { "line-color": color, "line-width": 2.5 },
+            paint: { "line-color": color, "line-width": 3 },
             layout: { visibility },
           });
           corridorLayerIdsRef.current[project.id] = [`${sourceId}-fill`, `${sourceId}-outline`];
@@ -223,14 +231,14 @@ export function MapView({
             id: `${sourceId}-casing`,
             type: "line",
             source: sourceId,
-            paint: { "line-color": "#ffffff", "line-width": 9, "line-opacity": 0.9 },
+            paint: { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.95 },
             layout: { visibility, "line-cap": "round", "line-join": "round" },
           });
           map.addLayer({
             id: `${sourceId}-line`,
             type: "line",
             source: sourceId,
-            paint: { "line-color": color, "line-width": 5.5, "line-opacity": 0.95 },
+            paint: { "line-color": color, "line-width": 6.5, "line-opacity": 1 },
             layout: { visibility, "line-cap": "round", "line-join": "round" },
           });
           corridorLayerIdsRef.current[project.id] = [`${sourceId}-casing`, `${sourceId}-line`];
@@ -331,12 +339,12 @@ export function MapView({
       layerIds.forEach((layerId) => {
         if (!map.getLayer(layerId)) return;
         if (layerId.endsWith("-line")) {
-          map.setPaintProperty(layerId, "line-width", selected ? 7.5 : 5.5);
-          map.setPaintProperty(layerId, "line-opacity", selected ? 1 : 0.95);
+          map.setPaintProperty(layerId, "line-width", selected ? 8.5 : 6.5);
+          map.setPaintProperty(layerId, "line-opacity", 1);
         } else if (layerId.endsWith("-fill")) {
-          map.setPaintProperty(layerId, "fill-opacity", selected ? 0.35 : 0.2);
+          map.setPaintProperty(layerId, "fill-opacity", selected ? 0.4 : 0.28);
         } else if (layerId.endsWith("-outline")) {
-          map.setPaintProperty(layerId, "line-width", selected ? 4 : 2.5);
+          map.setPaintProperty(layerId, "line-width", selected ? 4.5 : 3);
         }
       });
     });

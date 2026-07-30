@@ -120,8 +120,20 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
 - No rail line geometry — the MetroBus & JLTP entry only highlights the four MetroBus routes; the
   JLTP's rail-enhancement element has nothing to draw.
 - **No `cycle_infra` project entries.** The category and its filter exist, and the Open Data
-  Bristol cycle network map layer is unaffected, but no scheme currently qualifies under Rule 1 —
-  see "Deliberately excluded" below.
+  Bristol cycle network map layer is unaffected, but nothing currently qualifies. Cycle provision
+  in Bristol is mostly delivered *inside* corridor and Liveable Neighbourhood schemes (the
+  Hawkfield Road two-way track, Redcliffe Way's Temple Meads–Queen Square track, Bond Street's
+  parallel quiet route), so it's categorised there rather than duplicated.
+
+  The obvious candidates are the four Active Travel Fund 4 quietways — Deanery Road, Filwood
+  Quietway (Wedmore Vale), Malago Greenway (Hartcliffe–Hengrove–Bedminster) and Old Market
+  Quietway (St Matthias Park to Lawrence Hill roundabout). They're **not** added because they fail
+  Rule 2: the consultation ran in early 2024, the schemes are still waiting on a funding bid for
+  detailed design, and `ask.bristol.gov.uk/active-travel-fund-4-schemes` now 404s. Add them when a
+  live page exists.
+
+- **No geometry for the newer entries.** The nine schemes added in the 2026-07-30 pass are point
+  markers only; corridor lines would need OSM route extraction or a published scheme boundary.
 
 ## Deliberately excluded
 
