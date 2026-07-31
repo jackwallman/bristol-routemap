@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Project, ProjectCategory } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_LABELS } from "../types/project";
 
@@ -26,6 +27,13 @@ export function Sidebar({
   selectedId,
   onSelect,
 }: SidebarProps) {
+  const cardRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  useEffect(() => {
+    if (!selectedId) return;
+    cardRefs.current.get(selectedId)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
+
   return (
     <aside className="sidebar">
       <h1>Get About Bristol</h1>
@@ -82,6 +90,10 @@ export function Sidebar({
         {projects.map((project) => (
           <button
             key={project.id}
+            ref={(el) => {
+              if (el) cardRefs.current.set(project.id, el);
+              else cardRefs.current.delete(project.id);
+            }}
             className={"project-card" + (project.id === selectedId ? " project-card--selected" : "")}
             onClick={() => onSelect(project.id)}
           >
