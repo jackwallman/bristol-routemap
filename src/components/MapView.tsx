@@ -105,7 +105,18 @@ export function MapView({
     // stale call landing on an already-removed map instance.
     let cancelled = false;
     loadMutedStyle().then((style) => {
-      if (!cancelled) map.setStyle(style);
+      if (cancelled) return;
+      map.setStyle(style);
+      // This effect runs before flex layout has given the container its final
+      // size, so maplibre measures 0x0 and falls back to a 400x300 canvas.
+      // It will not correct that on its own: maplibre's internal ResizeObserver
+      // deliberately discards its first callback, and because the style arrives
+      // via setStyle rather than the constructor, the usual initial-resize path
+      // never runs either. Re-measure now that the style is in place, and force
+      // the frame that paints it — without this the map stays blank until
+      // something else (a window resize, a click) happens to trigger a render.
+      map.resize();
+      map.redraw();
     });
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     mapRef.current = map;
@@ -258,7 +269,14 @@ export function MapView({
       });
     });
 
-    const resizeObserver = new ResizeObserver(() => map.resize());
+    // Keeps the canvas in step with later layout changes (sidebar reflow, the
+    // 55%-height mobile breakpoint, window resizes). `redraw` alongside
+    // `resize` mirrors what maplibre's own observer does, so a resize that
+    // arrives while no render is scheduled still repaints.
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+      map.redraw();
+    });
     resizeObserver.observe(containerRef.current);
 
     return () => {
