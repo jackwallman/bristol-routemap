@@ -95,27 +95,6 @@ export const projects: Project[] = [
     coordinates: [-2.5966, 51.4536],
   },
   {
-    id: "metrobus-jltp",
-    name: "MetroBus network & Joint Local Transport Plan",
-    area: "West of England (regional)",
-    category: "rail_metrobus",
-    status: "completed",
-    description:
-      "The region's built rapid transit network, run by WECA/Travelwest rather than BCC: m1 (Cribbs Causeway ↔ Hengrove Park), m2 (Long Ashton P&R ↔ city centre), m3/m3x (Emersons Green ↔ city centre) and m4 (Cribbs Causeway ↔ city centre). Segregated busway sections and limited stops make cross-city and park-and-ride journeys substantially quicker than the local bus services on the same corridors, with twin-door boarding and off-bus ticketing at stop iPoints cutting dwell time. Listed here as delivered context for the corridors above — network map current from 5 April 2026, and further expansion is signposted by Travelwest but not tracked in this entry. The JLTP4 is the 2020–2036 strategic plan adopted by WECA and the four councils that sets the regional policy behind these schemes; its rail-enhancement element has no route geometry to show here. Note WECA published a new Transport Vision in February 2026 with a follow-on Transport Strategy in development, so JLTP4 is no longer the region's newest policy document — see the West of England mass transit entry. Highlighted lines are the four OSM route relations.",
-    sourceName: "MetroBus network (Travelwest)",
-    sourceUrl: "https://travelwest.info/metrobus/",
-    extraLinks: [
-      {
-        name: "JLTP4 2020–2036 (WECA)",
-        url: "https://www.westofengland-ca.gov.uk/what-we-do/transport/joint-local-transport-plan/",
-      },
-    ],
-    lastUpdated: "2026-07-30",
-    coordinates: [-2.5400, 51.4800],
-    geometryUrl: "/data/metrobus_network.geojson",
-    geometryType: "line",
-  },
-  {
     id: "broadmead",
     name: "Broadmead",
     area: "Broadmead / Old City",
@@ -220,10 +199,16 @@ export const projects: Project[] = [
     category: "rail_metrobus",
     status: "proposed",
     description:
-      "WECA's Transport Vision, published February 2026, commits the region to building mass transit — light rail, trams or tram-like vehicles on segregated roadways, with multiple doors, low floors and high capacity. Two initial concepts are named: Redcliffe Way in Bristol, and a link to Bristol Airport, which is the only regional airport in the country with no fixed transit connection and currently reachable only by road 16km from the centre. The West is the largest city-region in the UK without mass transit or a commitment to build it, so this is the gap-closing move rather than an incremental upgrade. Leaders have committed to start construction within four to five years of the announcement, with £752m secured for buses, trains and mass transit planning and 250+ new green buses arriving by the end of 2026. Note this vision post-dates JLTP4 and a follow-on Transport Strategy is being developed — see the MetroBus & JLTP entry.",
+      "WECA's Transport Vision, published February 2026, commits the region to building mass transit — light rail, trams or tram-like vehicles on segregated roadways, with multiple doors, low floors and high capacity. Two initial concepts are named: Redcliffe Way in Bristol, and a link to Bristol Airport, which is the only regional airport in the country with no fixed transit connection and currently reachable only by road 16km from the centre. The West is the largest city-region in the UK without mass transit or a commitment to build it, so this is the gap-closing move rather than an incremental upgrade. Leaders have committed to start construction within four to five years of the announcement, with £752m secured for buses, trains and mass transit planning and 250+ new green buses arriving by the end of 2026. Note this vision post-dates JLTP4 — the 2020–2036 Joint Local Transport Plan adopted by WECA and the four councils, still the formally adopted plan — and a follow-on Transport Strategy is in development.",
     sourceName: "Transport Vision (WECA)",
     sourceUrl:
       "https://www.westofengland-ca.gov.uk/news/a-transport-network-you-can-trust-the-wests-new-transport-vision/",
+    extraLinks: [
+      {
+        name: "JLTP4 2020–2036 (WECA)",
+        url: "https://www.westofengland-ca.gov.uk/what-we-do/transport/joint-local-transport-plan/",
+      },
+    ],
     lastUpdated: "2026-07-30",
     coordinates: [-2.7191, 51.3827],
   },
@@ -239,5 +224,34 @@ export const projects: Project[] = [
     sourceUrl: "https://travelwest.info/projects/bristol-school-streets/",
     lastUpdated: "2026-07-30",
     coordinates: [-2.5750, 51.4700],
+  },
+  {
+    id: "railway-path-barriers",
+    name: "Bristol & Bath Railway Path: barrier removal, lighting & CCTV",
+    area: "Staple Hill / Warmley / Oldland Common / Bitton",
+    category: "cycle_infra",
+    status: "approved",
+    description:
+      "Removing or altering the barriers that create pinch points at nine locations between Siston Common and Bitton Station: Siston Common, near the A4174 ring road, Station Close and the A420 crossing in Warmley, Meadow Court Drive and School Road in Oldland Common, by Cherry Gardens play area, and the north and south car parks at Bitton Station. Also 20 CCTV cameras between Staple Hill Tunnel and the former Mangotsfield Station plus two at Warmley Waiting Room, and a lighting scheme from Siston Hill roundabout to Warmley Waiting Room designed to limit impact on wildlife. The barriers are what currently decide who can use the path at all — the narrow gateways shut out mobility scooters, wheelchairs, pushchairs and non-standard cycles from Bristol's main traffic-free commuter route, so widening them changes the route's reach rather than just its comfort. Led by South Gloucestershire Council with £450,000+ from WECA via the City Region Sustainable Transport Settlement and Economic Development Fund. Consultation closed end of January 2026; funding was allocated in February 2026 and detailed plans are in development. Note the works are on the South Gloucestershire section of the path, outside the city boundary — included because it's a primary Bristol commuting corridor. No route geometry drawn; the marker sits mid-section near Warmley.",
+    sourceName: "Railway Path funding (WECA)",
+    sourceUrl:
+      "https://www.westofengland-ca.gov.uk/news/funding-allocated-for-improvements-on-bristol-and-bath-railway-path/",
+    lastUpdated: "2026-07-30",
+    coordinates: [-2.4600, 51.4460],
+  },
+  {
+    id: "feeder-promenade",
+    name: "Feeder Promenade",
+    area: "St Philip's Marsh (Feeder Canal, Temple Quarter)",
+    category: "cycle_infra",
+    status: "proposed",
+    description:
+      "A continuous walking and cycling path proposed along the Feeder Canal in St Philip's Marsh, separated from traffic as part of a wider 'promenade' street type in the area's masterplan. The canal is currently a working industrial waterway with no public path alongside it; the promenade would open it up as a car-free through-route linking the new St Philip's Marsh neighbourhood to Temple Meads and the city centre, with flood defences designed into the landscaping rather than left as a barrier to access. This is an early masterplan commitment rather than a funded, dated scheme — the wider St Philip's Marsh site is expected to be developed over 10 to 20 years — so treat the alignment as indicative. Part of the Temple Quarter regeneration alongside Temple Meads station's Southern Gateway and the Victoria Street works on Bus Route 2. Line drawn is the proposed Feeder Road corridor segment from Open Data Bristol's cycle network dataset.",
+    sourceName: "St Philip's Marsh (Bristol City Council)",
+    sourceUrl: "https://www.bristol.gov.uk/ask/projects/temple-quarter/st-philips-marsh",
+    lastUpdated: "2026-07-31",
+    coordinates: [-2.573087, 51.449384],
+    geometryUrl: "/data/feeder_promenade.geojson",
+    geometryType: "line",
   },
 ];

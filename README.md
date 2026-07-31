@@ -85,7 +85,7 @@ something that tells them what the scheme is.
 
 Check the link actually resolves and actually contains project specifics before committing it.
 Where an entry legitimately covers more than one programme, give each its own link via `extraLinks`
-rather than picking one and hoping — see the `metrobus-jltp` entry.
+rather than picking one and hoping — see the `metrowest-portishead` entry.
 
 ### Rule 3 — the description says what's changing and why it's better
 
@@ -117,23 +117,34 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
   data above, not automated fetching.
 - "City Centre transport transformation" has no natural route/boundary and stays as a point
   marker.
-- No rail line geometry — the MetroBus & JLTP entry only highlights the four MetroBus routes; the
-  JLTP's rail-enhancement element has nothing to draw.
-- **No `cycle_infra` project entries.** The category and its filter exist, and the Open Data
-  Bristol cycle network map layer is unaffected, but nothing currently qualifies. Cycle provision
-  in Bristol is mostly delivered *inside* corridor and Liveable Neighbourhood schemes (the
-  Hawkfield Road two-way track, Redcliffe Way's Temple Meads–Queen Square track, Bond Street's
-  parallel quiet route), so it's categorised there rather than duplicated.
+- No rail line geometry — MetroWest Phase 1 (Portishead line) has no route drawn; its marker sits
+  at Pill, midway along.
+- **`cycle_infra` is thin.** Only `railway-path-barriers` and `feeder-promenade` sit in it. Most
+  live cycle provision in Bristol is delivered *inside* corridor and Liveable Neighbourhood schemes
+  (the Hawkfield Road two-way track, Redcliffe Way's Temple Meads–Queen Square track, Bond Street's
+  parallel quiet route) and is categorised there rather than duplicated.
 
-  The obvious candidates are the four Active Travel Fund 4 quietways — Deanery Road, Filwood
-  Quietway (Wedmore Vale), Malago Greenway (Hartcliffe–Hengrove–Bedminster) and Old Market
-  Quietway (St Matthias Park to Lawrence Hill roundabout). They're **not** added because they fail
-  Rule 2: the consultation ran in early 2024, the schemes are still waiting on a funding bid for
-  detailed design, and `ask.bristol.gov.uk/active-travel-fund-4-schemes` now 404s. Add them when a
-  live page exists.
+  `railway-path-barriers` bends two rules deliberately, both flagged in the entry itself. Its works
+  are on the **South Gloucestershire** section of the path (Siston Common to Bitton), outside the
+  city — kept because the Railway Path is a primary Bristol commuting corridor. And its `sourceUrl`
+  is a WECA **news post**, which Rule 2 normally rejects: South Gloucestershire's consultation
+  closed at the end of January 2026 and its page is no longer reachable, so the February 2026
+  funding announcement is the best surviving summary. Swap it for a proper scheme page if one
+  appears.
 
-- **No geometry for the newer entries.** The nine schemes added in the 2026-07-30 pass are point
-  markers only; corridor lines would need OSM route extraction or a published scheme boundary.
+  The **Active Travel Fund 4** quietways — Deanery Road, Filwood, Malago Greenway and Old Market
+  (St Matthias Park to Lawrence Hill roundabout) — are **not** entries because they fail Rule 2:
+  consultation ran in early 2024, they're still awaiting a funding bid for detailed design, and
+  `ask.bristol.gov.uk/active-travel-fund-4-schemes` now 404s. Add them when a live page exists.
+
+- **`public/data/metrobus_network.geojson` is now unreferenced** after the MetroBus entry was
+  removed (see "Deliberately excluded"). `scripts/fetch-osm-routes.mjs` still fetches it. Left in
+  place rather than deleted, in case the network is wanted back as a context map layer rather than
+  a project entry.
+
+- **No geometry for most newer entries.** The schemes added in the 2026-07-30 pass are point
+  markers only, apart from `feeder-promenade`; corridor lines would need OSM route extraction or a
+  published scheme boundary.
 
 ## Deliberately excluded
 
@@ -146,6 +157,23 @@ Kept here so they don't get re-added by the next curation pass:
   authoritative. Worth consulting when curating; not an entry.
 
 Both fail Rule 1: they're places to read about mobility changes, not mobility changes.
+
+### Completed before 2024
+
+The list tracks change that is still in prospect or in progress, so schemes finished before 2024
+are out regardless of how well they meet the three rules. Removed on that basis:
+
+- **MetroBus network & Joint Local Transport Plan** — the m1–m4 network was delivered in phases and
+  finished long before the cut-off: m3 opened 29 May 2018, m2 on 3 September 2018, m1 on 6 January
+  2019 and m4 on 22 January 2023. JLTP4 rode along in the same entry; the adopted-plan link now
+  hangs off `we-mass-transit` instead. Any *future* MetroBus extension is a separate scheme — see
+  `m1-metrobus-extension`, which is under construction and stays.
+- **Malago Greenway** and **Filwood Quietway** — delivered under the Cycle Ambition Fund, 2015–2018.
+  Travelwest's pages for both are explicitly archives of completed work. Their ATF4 follow-on
+  upgrades are a different, unfunded scheme (above).
+
+Anything whose completion date is genuinely unclear should keep its real status and stay, rather
+than being removed on a guess — check the source before cutting.
 
 ## Development
 
