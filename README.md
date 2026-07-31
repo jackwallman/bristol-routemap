@@ -36,10 +36,13 @@ Three layers:
   dataset shows a modified date of 2025-09-05 — current, not the 2017 snapshot the original
   research turned up.
 
-- **`public/data/{a4_portway,bus_route_2,metrobus_network}.geojson`** (OpenStreetMap, via
-  Overpass) — real road/route geometry for corridor projects that have no dataset on Open Data
-  Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations (First West of
-  England / Metrobus, matched by `ref` + `network` tag). Re-fetch with:
+- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line}.geojson`**
+  (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
+  dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
+  (First West of England / Metrobus, matched by `ref` + `network` tag). The Portishead Branch Line
+  has no route relation, so it's matched by Network Rail's line code instead (ways tagged
+  `ref=POD`), which also excludes the disused, unrelated Weston, Clevedon & Portishead Light
+  Railway. Re-fetch with:
 
   ```bash
   node scripts/fetch-osm-routes.mjs
@@ -117,8 +120,6 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
   data above, not automated fetching.
 - "City Centre transport transformation" has no natural route/boundary and stays as a point
   marker.
-- No rail line geometry — MetroWest Phase 1 (Portishead line) has no route drawn; its marker sits
-  at Pill, midway along.
 - **`cycle_infra` is thin.** Only `railway-path-barriers` and `feeder-promenade` sit in it. Most
   live cycle provision in Bristol is delivered *inside* corridor and Liveable Neighbourhood schemes
   (the Hawkfield Road two-way track, Redcliffe Way's Temple Meads–Queen Square track, Bond Street's

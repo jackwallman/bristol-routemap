@@ -63,6 +63,19 @@ const metrobusRelations = {
   m4: 17618876,
 };
 
+// Portishead Branch Line (MetroWest Phase 1): no OSM route relation exists for
+// it, so this matches individual ways by Network Rail's line code (ref=POD)
+// rather than a name search, which also picks up the disused/adjacent Weston,
+// Clevedon & Portishead Light Railway (ref=WCA). Includes railway=rail and
+// railway=construction (track currently being relaid for reopening).
+const portisheadLineQuery = `
+[out:json][timeout:60];
+(
+  way["ref"="POD"]["railway"~"rail|construction"](51.40,-2.80,51.51,-2.50);
+);
+out geom;
+`;
+
 async function main() {
   console.log("Fetching A4 Portway...");
   const portway = await overpassQuery(portwayQuery);
@@ -96,6 +109,15 @@ async function main() {
     "public/data/metrobus_network.geojson",
     JSON.stringify({ type: "FeatureCollection", features: metrobusFeatures }),
   );
+  await sleep(6000);
+
+  console.log("Fetching Portishead Branch Line...");
+  const portishead = await overpassQuery(portisheadLineQuery);
+  writeFileSync(
+    "public/data/portishead_line.geojson",
+    JSON.stringify(waysToGeoJSON(portishead.elements, { corridor: "Portishead Branch Line" })),
+  );
+  console.log(`  ${portishead.elements.length} elements written`);
 
   console.log("Done.");
 }

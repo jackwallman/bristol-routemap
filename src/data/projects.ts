@@ -166,7 +166,7 @@ export const projects: Project[] = [
     category: "rail_metrobus",
     status: "underway",
     description:
-      "Reopening 14km of disused railway between Portishead and Bristol to passenger service, with new stations at Portishead and Pill and car parking, plus service improvements on the Severn Beach and Bath lines. It connects around 50,000 people to the rail network who have no station today and improves services for a further 180,000 living within 1km of existing stations — Portishead is currently a town of that size reachable only by a congested road. The Department for Transport approved it in July 2025; early works started autumn 2025 with main construction from spring/summer 2026, and trains are expected to run hourly to Temple Meads from 2028. Delivered jointly by WECA and North Somerset Council. No route geometry drawn yet — the marker sits at Pill, midway along the line.",
+      "Reopening 14km of disused railway between Portishead and Bristol to passenger service, with new stations at Portishead and Pill and car parking, plus service improvements on the Severn Beach and Bath lines. It connects around 50,000 people to the rail network who have no station today and improves services for a further 180,000 living within 1km of existing stations — Portishead is currently a town of that size reachable only by a congested road. The Department for Transport approved it in July 2025; early works started autumn 2025 with main construction from spring/summer 2026, and trains are expected to run hourly to Temple Meads from 2028. Delivered jointly by WECA and North Somerset Council. Highlighted line is the branch's real track geometry via OpenStreetMap (ways tagged ref=POD, Network Rail's code for the line), Portishead to its junction with the Bristol–Exeter mainline near Parson Street — a mix of railway=rail and railway=construction (track currently being relaid for reopening).",
     sourceName: "MetroWest Phase 1 (Travelwest)",
     sourceUrl: "https://travelwest.info/projects/portishead-rail-line-metrowest-phase-1/",
     extraLinks: [
@@ -175,8 +175,10 @@ export const projects: Project[] = [
         url: "https://www.networkrail.co.uk/our-work/our-routes/western/the-portishead-line/",
       },
     ],
-    lastUpdated: "2026-07-30",
+    lastUpdated: "2026-07-31",
     coordinates: [-2.6890, 51.4790],
+    geometryUrl: "/data/portishead_line.geojson",
+    geometryType: "line",
   },
   {
     id: "m1-metrobus-extension",
