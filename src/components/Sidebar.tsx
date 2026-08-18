@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { Project, ProjectCategory } from "../types/project";
-import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_LABELS } from "../types/project";
+import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface SidebarProps {
   projects: Project[];
@@ -36,7 +37,10 @@ export function Sidebar({
 
   return (
     <aside className="sidebar">
-      <h1>Get About Bristol</h1>
+      <div className="sidebar-header">
+        <h1>Get About Bristol</h1>
+        <ThemeToggle />
+      </div>
       <p className="sidebar-subtitle">Transport infrastructure projects, in one place</p>
 
       <section className="filter-section">
@@ -99,12 +103,39 @@ export function Sidebar({
           >
             <div className="project-card-header">
               <span className="project-name">{project.name}</span>
-              <span className={`status-badge status-${project.status}`}>
+              <span
+                className="status-badge"
+                style={{ backgroundColor: STATUS_COLORS[project.status] }}
+              >
                 {STATUS_LABELS[project.status]}
               </span>
             </div>
+            {(project.startDate || project.endDate) && (
+              <div className="project-dates">
+                {project.startDate && (
+                  <span>
+                    <strong>Start</strong> {project.startDate}
+                  </span>
+                )}
+                {project.endDate && (
+                  <span>
+                    <strong>Finish</strong> {project.endDate}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="project-area">{project.area}</div>
-            <p className="project-description">{project.description}</p>
+            {project.highlights && project.highlights.length > 0 && (
+              <ul className="project-highlights">
+                {project.highlights.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            )}
+            <details className="project-description-details" onClick={(e) => e.stopPropagation()}>
+              <summary>Full description</summary>
+              <p className="project-description">{project.description}</p>
+            </details>
             <div className="project-meta">
               <a href={project.sourceUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                 {project.sourceName} ↗

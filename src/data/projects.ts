@@ -25,6 +25,14 @@ export const projects: Project[] = [
       },
     ],
     lastUpdated: "2026-07-30",
+    startDate: "Spring 2025",
+    endDate: "Permanence decision due 2026",
+    highlights: [
+      "Bus gates on Avonvale Road, modal filters and pocket parks across Beaufort Road, Barnes Street, Cobden Street and Ducie Road",
+      "Every street keeps car access — only through-traffic is removed",
+      "Speeds up the number 5 bus and cuts school-run traffic on Beaufort Road",
+      "Currently a trial; Transport and Connectivity Committee decides on a permanent layout in 2026",
+    ],
     coordinates: [-2.5545, 51.4595],
     geometryUrl: "/data/eastbristol_ln_boundary.geojson",
     geometryType: "polygon",
@@ -47,6 +55,12 @@ export const projects: Project[] = [
       },
     ],
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Area-wide scheme across 11 neighbourhoods in Southville, Bedminster, Ashton Vale, Malago Vale and Windmill Hill",
+      "Every road keeps vehicle access; through-traffic is discouraged or prevented and speeds lowered",
+      "ANPR surveys found 10–13% of Southville traffic was shortcutting through — 650–1,450 vehicles",
+      "Consultation ran Sep–Oct 2025; report published May 2026, decision still to come",
+    ],
     coordinates: [-2.5975, 51.4375],
     geometryUrl: "/data/south_bristol_ln_boundary.geojson",
     geometryType: "polygon",
@@ -62,6 +76,11 @@ export const projects: Project[] = [
     sourceName: "Bus Route 2 (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/bus-route-2/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Bus priority and street improvements along the whole A37/A4018 corridor, not just one junction",
+      "Public realm work and better crossings for people on foot, wheeling and cycling",
+      "Aim is reliable end-to-end journeys, easing congestion and air quality on two of the city's busiest radial roads",
+    ],
     coordinates: [-2.5975, 51.4550],
     geometryUrl: "/data/bus_route_2.geojson",
     geometryType: "line",
@@ -77,6 +96,12 @@ export const projects: Project[] = [
     sourceName: "A4 Portway (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/a4-portway/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "New 24-hour bus lanes keep buses out of queues on the main western approach all day",
+      "Reduced speed limits and junction improvements make the route usable on foot and by bike",
+      "More green space and tree planting where the gorge allows",
+      "Weeknight resurfacing between Hotwell Road and Park Road ran 27 Jul–26 Oct 2026",
+    ],
     coordinates: [-2.6480, 51.4820],
     geometryUrl: "/data/a4_portway.geojson",
     geometryType: "line",
@@ -92,6 +117,13 @@ export const projects: Project[] = [
     sourceName: "City Centre (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/city-centre/",
     lastUpdated: "2026-07-30",
+    endDate: "Buses off Broadmead from 30 Aug 2026",
+    highlights: [
+      "Umbrella programme covering five schemes: Broadmead, Redcliffe Way, Temple Way, Bedminster Bridges and Bond Street",
+      "25 bus services move off Broadmead's busiest shopping streets from 30 August 2026",
+      "Road layout prepared for a mostly segregated rapid transit route through the centre",
+      "Speeds up buses, makes Broadmead walkable, and fixes walking/cycling approaches from Temple Meads and south Bristol",
+    ],
     coordinates: [-2.5966, 51.4536],
   },
   {
@@ -105,6 +137,12 @@ export const projects: Project[] = [
     sourceName: "Broadmead (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/broadmead/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Reworks Broadmead's streets and public spaces ahead of ~5,000 more people living in the area",
+      "Safer, more direct walking, wheeling and cycling routes; improved bus movement",
+      "Sets up the layout for the planned citywide rapid transit route",
+      "Follows on from Old City pedestrianisation and the Bristol Bridge reconfiguration",
+    ],
     coordinates: [-2.5890, 51.4575],
   },
   {
@@ -118,6 +156,12 @@ export const projects: Project[] = [
     sourceName: "Redcliffe Way (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/redcliffe-way/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Wider decluttered pavements and signalised crossings across Redcliffe Roundabout",
+      "Separated cycle track linking Temple Meads to Queen Square and Redcliff Hill",
+      "Extended bus lanes complete a loop around the city centre, so people can change buses without going into the middle",
+      "New bus gates on Redcliffe Street enable a future rapid transit route to UWE Frenchay",
+    ],
     coordinates: [-2.5895, 51.4492],
   },
   {
@@ -131,6 +175,11 @@ export const projects: Project[] = [
     sourceName: "Temple Way (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/temple-way/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Construction under way from the northern end down to the Friary junction near Temple Meads",
+      "Changes to Old Market Roundabout and the bus stops north of it",
+      "Makes buses more reliable and improves safety for people walking and cycling on the main station-to-centre approach",
+    ],
     coordinates: [-2.5850, 51.4540],
   },
   {
@@ -144,6 +193,12 @@ export const projects: Project[] = [
     sourceName: "Bedminster Bridges (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/bedminster-bridges/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Removes the roundabout; each bridge becomes two-way — one bus-only, one general traffic",
+      "Separate cycle paths, quicker crossings and more pavement space",
+      "Buses come off the roundabout queue entirely rather than getting priority within it",
+      "Main gateway from Bedminster, Southville and south Bristol into the city centre",
+    ],
     coordinates: [-2.5935, 51.4452],
   },
   {
@@ -157,6 +212,11 @@ export const projects: Project[] = [
     sourceName: "Bond Street (Bristol on the Move)",
     sourceUrl: "https://bristolonthemove.com/project/bond-street/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Bus lanes in both directions on Bond Street, speeding buses between St James Barton Roundabout and the M32",
+      "Covers the roundabout's east side, Bond Street South junction, Newfoundland Circus and Newfoundland Road",
+      "Existing on-road cycle lane is replaced by a two-way route on quieter parallel streets",
+    ],
     coordinates: [-2.5855, 51.4600],
   },
   {
@@ -176,6 +236,14 @@ export const projects: Project[] = [
       },
     ],
     lastUpdated: "2026-07-31",
+    startDate: "Autumn 2025 (early works)",
+    endDate: "Hourly trains from 2028",
+    highlights: [
+      "Reopens 14km of disused railway between Portishead and Bristol, with new stations at Portishead and Pill",
+      "Connects ~50,000 people to the rail network with no station today; improves services for a further 180,000",
+      "Approved by the DfT July 2025; main construction from spring/summer 2026",
+      "Delivered jointly by WECA and North Somerset Council",
+    ],
     coordinates: [-2.6890, 51.4790],
     geometryUrl: "/data/portishead_line.geojson",
     geometryType: "line",
@@ -192,6 +260,14 @@ export const projects: Project[] = [
     sourceUrl:
       "https://www.bristol.gov.uk/residents/streets-travel/transport-plans-and-projects/metrobus-bus-rapid-transit-brt/m1-metrobus-extension-and-active-travel-improvements",
     lastUpdated: "2026-07-30",
+    startDate: "Jan 2026",
+    endDate: "Autumn 2026 (expected)",
+    highlights: [
+      "Extends the m1 MetroBus from Hengrove Park Leisure Centre to Imperial Retail Park",
+      "Two-way cycle path on Hawkfield Road, separated from both pavement and carriageway",
+      "New pedestrian crossings, traffic calming, and step-free MetroBus boarding platforms",
+      "Brings the rapid transit network to a part of south Bristol where new housing is being built",
+    ],
     coordinates: [-2.5945, 51.4140],
   },
   {
@@ -212,6 +288,13 @@ export const projects: Project[] = [
       },
     ],
     lastUpdated: "2026-07-30",
+    startDate: "Construction from ~2030 (target, per WECA's 4–5 year commitment)",
+    highlights: [
+      "WECA's Transport Vision (Feb 2026) commits the region to light rail or tram-like mass transit",
+      "Two initial concepts named: Redcliffe Way in Bristol, and a link to Bristol Airport",
+      "The West is the largest UK city-region without mass transit or a commitment to build it",
+      "£752m secured for buses, trains and mass transit planning; 250+ new green buses by end of 2026",
+    ],
     coordinates: [-2.7191, 51.3827],
   },
   {
@@ -225,6 +308,12 @@ export const projects: Project[] = [
     sourceName: "Bristol School Streets (Travelwest)",
     sourceUrl: "https://travelwest.info/projects/bristol-school-streets/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Timed closures of streets outside school entrances at opening and closing times",
+      "Only walking, wheeling, cycling and scooting allowed through, plus emergency/Blue Badge exemptions",
+      "16 primary schools have live schemes; four more consulted on joining, closing 23 March 2026",
+      "Removes the school-run traffic that makes the gate most dangerous exactly when children arrive",
+    ],
     coordinates: [-2.5750, 51.4700],
   },
   {
@@ -239,6 +328,12 @@ export const projects: Project[] = [
     sourceUrl:
       "https://www.westofengland-ca.gov.uk/news/funding-allocated-for-improvements-on-bristol-and-bath-railway-path/",
     lastUpdated: "2026-07-30",
+    highlights: [
+      "Removes or alters pinch-point barriers at nine locations between Siston Common and Bitton Station",
+      "Opens the path to mobility scooters, wheelchairs, pushchairs and non-standard cycles currently shut out",
+      "20 CCTV cameras and a wildlife-conscious lighting scheme from Siston Hill to Warmley Waiting Room",
+      "Funded Feb 2026 with £450,000+ from WECA; construction start not yet confirmed",
+    ],
     coordinates: [-2.4600, 51.4460],
   },
   {
@@ -252,6 +347,12 @@ export const projects: Project[] = [
     sourceName: "St Philip's Marsh (Bristol City Council)",
     sourceUrl: "https://www.bristol.gov.uk/ask/projects/temple-quarter/st-philips-marsh",
     lastUpdated: "2026-07-31",
+    highlights: [
+      "Continuous car-free walking and cycling path proposed along the Feeder Canal in St Philip's Marsh",
+      "Opens up a currently-inaccessible working industrial waterway as a through-route",
+      "Links the new St Philip's Marsh neighbourhood to Temple Meads and the city centre",
+      "Early masterplan commitment, not a funded/dated scheme — site expected to develop over 10–20 years",
+    ],
     coordinates: [-2.573087, 51.449384],
     geometryUrl: "/data/feeder_promenade.geojson",
     geometryType: "line",
