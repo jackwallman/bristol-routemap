@@ -2,7 +2,8 @@
 // (free, no key) for corridor projects that don't have geometry published on
 // Open Data Bristol. Run with: node scripts/fetch-osm-routes.mjs
 // Pass a section name to refresh just one output without re-fetching the rest:
-// node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1, henbury)
+// node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1,
+// henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -172,6 +173,135 @@ way(id:${henburyLineWayIds.join(",")});
 out geom;
 `;
 
+// City centre schemes (bristolonthemove.com). Each of these is a real named street or a short
+// chain of adjoining named streets, so — like A4 Portway — a plain name+bbox search is enough;
+// no hand-picked way IDs needed unless noted otherwise.
+
+// Temple Way: single dual-carriageway street, Old Market Roundabout to the Friary junction.
+const templeWayQuery = `
+[out:json][timeout:30];
+(
+  way["name"="Temple Way"]["highway"](51.449,-2.586,51.456,-2.582);
+);
+out geom;
+`;
+
+// Bond Street scheme: the bus-lane corridor named in the project page — Bond Street itself,
+// Newfoundland Circus and Newfoundland Road out towards the M32 — is one connected chain of
+// named ways, so a single bbox'd name search picks up exactly that corridor.
+const bondStreetQuery = `
+[out:json][timeout:30];
+(
+  way["name"="Bond Street"]["highway"](51.458,-2.591,51.467,-2.575);
+  way["name"="Newfoundland Circus"]["highway"](51.458,-2.591,51.467,-2.575);
+  way["name"="Newfoundland Road"]["highway"](51.458,-2.591,51.467,-2.575);
+);
+out geom;
+`;
+
+// Bond Street's replacement cycle route (bond-street-cycle-route): Pembroke Street, the south
+// side of Portland Square, and Wilson Street, per the project page's "Cycle route on quieter
+// streets" section. Portland Square is a one-way loop road split into many OSM ways; way
+// 72343243 is the whole loop as a single closed way, so it's trimmed to just the south arc
+// (Pembroke Street to Wilson Street) rather than drawing the full square.
+const bondStreetCycleWayIds = [
+  // Pembroke Street
+  4234842,
+  // Portland Square: the one-way loop (trimmed below) plus the short link ways to Wilson Street
+  72343243, 692748721, 235296249,
+  // Wilson Street
+  72343225,
+];
+const bondStreetCycleQuery = `
+[out:json][timeout:30];
+way(id:${bondStreetCycleWayIds.join(",")});
+out geom;
+`;
+const PORTLAND_SQUARE_WEST_CORNER = [-2.58592, 51.46072];
+
+// Bedminster Bridges scheme: Redcliff Hill and Bedminster Parade run north-south into the
+// roundabout, then East Street continues south from it — but Redcliff Hill and Bedminster Parade
+// don't actually join up in OSM: the roundabout and twin bridges over the New Cut between them are
+// tagged name="Bedminster Bridge Roundabout", a separate name, not "Redcliff Hill"/"Bedminster
+// Parade" (confirmed against the scheme's own published plan diagrams, which show the twin bridges
+// as part of the works). East Street's south bound is tightened to 51.4413 (just north of the
+// Dalby Avenue junction) — the untrimmed bbox picks up ~500m more of East Street than the plan
+// shows, well past where the works actually stop near Asda; Redcliff Hill and Bedminster Parade's
+// own bboxes are unaffected by this.
+const bedminsterBridgesQuery = `
+[out:json][timeout:30];
+(
+  way["name"="Redcliff Hill"]["highway"](51.440,-2.601,51.449,-2.589);
+  way["name"="Bedminster Parade"]["highway"](51.440,-2.601,51.449,-2.589);
+  way["name"="East Street"]["highway"](51.4413,-2.601,51.449,-2.589);
+);
+out geom;
+`;
+
+// The roundabout/bridge ways connecting Redcliff Hill's south end to Bedminster Parade's north
+// end, hand-picked (same technique as the m1 extension) by tracing OSM's "Bedminster Bridge
+// Roundabout"-named segments from Redcliff Hill's endpoint (-2.59124, 51.44604) to Bedminster
+// Parade's endpoint (-2.59126, 51.44522) — the west side of the roundabout, including the two
+// way segments tagged bridge=yes that are the actual bridge deck over the New Cut. Re-check by
+// re-running the BFS in this file's git history if these way IDs stop matching.
+const bedminsterBridgeRoundaboutWayIds = [
+  203633552, 34639889, 121381299, 1506069633, 34639888, 180662477, 39020138,
+];
+const bedminsterBridgeRoundaboutQuery = `
+[out:json][timeout:30];
+way(id:${bedminsterBridgeRoundaboutWayIds.join(",")});
+out geom;
+`;
+
+// Redcliffe Way scheme: "Redcliffe Way", "Redcliffe Roundabout" and "Redcliffe Street" are all
+// tagged name="Redcliffe Way" in OSM (no separate "Redcliffe Street"/"Redcliffe Roundabout" way
+// names exist), so one name+bbox search covers the whole corridor from Redcliff Hill in the west
+// to Temple Circus/Victoria Street in the east.
+const redcliffeWayQuery = `
+[out:json][timeout:30];
+(
+  way["name"="Redcliffe Way"]["highway"](51.447,-2.594,51.450,-2.583);
+);
+out geom;
+`;
+
+// Redcliffe Way's separated cycle track (redcliffe-way-cycle-track): the project page describes
+// it running the length of Redcliffe Way/the roundabout, plus onward links towards Queen Square
+// and along Redcliff Hill to Bedminster Bridges (south) that the bus/traffic corridor above
+// doesn't include. Reuses the same Redcliffe Way ways as the parent corridor (the cycle track
+// literally runs alongside/on the road, same as the Hawkfield Road cycle path reuses the m1
+// extension's Hawkfield Road segment) plus Redcliff Hill. The Queen Square end is NOT drawn: the
+// source only says the track runs "alongside the pedestrian route between Temple Meads and Queen
+// Square (Brunel Mile)" with no named street given, and OSM's only "Queen Square" way is the
+// square's full four-sided perimeter road — fetching it would draw the track looping the whole
+// square, which the source doesn't support. Same reasoning as the Temple Meads end, which is
+// also left undrawn for lack of a matching "Brunel Mile" way in OSM.
+
+// Broadmead scheme: the streets losing through-traffic — Union Street, The Horsefair and Penn
+// Street — form one connected chain (Union Street's north end is the access into The Horsefair
+// the scheme closes; The Horsefair's north end continues directly into Penn Street).
+const broadmeadQuery = `
+[out:json][timeout:30];
+(
+  way["name"="Union Street"]["highway"](51.454,-2.593,51.459,-2.585);
+  way["name"="The Horsefair"]["highway"](51.454,-2.593,51.459,-2.585);
+  way["name"="Penn Street"]["highway"](51.454,-2.593,51.459,-2.585);
+);
+out geom;
+`;
+
+// Bristol & Bath Railway Path barrier removal, lighting and CCTV: the whole path is a single
+// named way (tagged highway=cycleway, railway=abandoned) split into many segments, so a
+// name+bbox search bounded to the works extent — Siston Common down to Bitton Station — picks
+// up exactly that section without needing the wider Bristol-to-Bath route relation.
+const railwayPathQuery = `
+[out:json][timeout:30];
+(
+  way["name"~"Railway Path",i]["highway"](51.406,-2.483,51.466,-2.449);
+);
+out geom;
+`;
+
 async function main() {
   const only = process.argv[2];
   const want = (section) => !only || only === section;
@@ -263,6 +393,120 @@ async function main() {
       JSON.stringify(waysToGeoJSON(henbury.elements, { corridor: "Henbury Line" })),
     );
     console.log(`  ${henbury.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("temple-way")) {
+    console.log("Fetching Temple Way...");
+    const templeWay = await overpassQuery(templeWayQuery);
+    writeFileSync(
+      "public/data/temple_way.geojson",
+      JSON.stringify(waysToGeoJSON(templeWay.elements, { corridor: "Temple Way" })),
+    );
+    console.log(`  ${templeWay.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("bond-street")) {
+    console.log("Fetching Bond Street corridor...");
+    const bondStreet = await overpassQuery(bondStreetQuery);
+    writeFileSync(
+      "public/data/bond_street.geojson",
+      JSON.stringify(waysToGeoJSON(bondStreet.elements, { corridor: "Bond Street" })),
+    );
+    console.log(`  ${bondStreet.elements.length} elements written`);
+    await sleep(6000);
+
+    console.log("Fetching Bond Street cycle route (Pembroke St / Portland Square / Wilson St)...");
+    const bondCycle = await overpassQuery(bondStreetCycleQuery);
+    const bondCycleGj = waysToGeoJSON(bondCycle.elements, { corridor: "Bond Street cycle route" });
+    const portlandSquare = bondCycleGj.features.find((f) => f.properties.osm_id === 72343243);
+    // The loop is a single closed way; keep only the south arc from Pembroke Street's end
+    // round to Wilson Street's end, not the full square.
+    trimAtNearestNode(portlandSquare, PORTLAND_SQUARE_WEST_CORNER, "start");
+    writeFileSync("public/data/bond_street_cycle_route.geojson", JSON.stringify(bondCycleGj));
+    console.log(`  ${bondCycleGj.features.length} features written`);
+    await sleep(6000);
+  }
+
+  if (want("bedminster-bridges")) {
+    console.log("Fetching Bedminster Bridges corridor...");
+    const bedminster = await overpassQuery(bedminsterBridgesQuery);
+    const bedminsterGj = waysToGeoJSON(bedminster.elements, { corridor: "Bedminster Bridges" });
+    await sleep(6000);
+
+    console.log("Fetching Bedminster Bridge Roundabout (the twin bridges themselves)...");
+    const roundabout = await overpassQuery(bedminsterBridgeRoundaboutQuery);
+    const roundaboutGj = waysToGeoJSON(roundabout.elements, { corridor: "Bedminster Bridges" });
+
+    writeFileSync(
+      "public/data/bedminster_bridges.geojson",
+      JSON.stringify({
+        type: "FeatureCollection",
+        features: [...bedminsterGj.features, ...roundaboutGj.features],
+      }),
+    );
+    console.log(`  ${bedminsterGj.features.length + roundaboutGj.features.length} features written`);
+    await sleep(6000);
+  }
+
+  if (want("redcliffe-way")) {
+    console.log("Fetching Redcliffe Way corridor...");
+    const redcliffeWay = await overpassQuery(redcliffeWayQuery);
+    const redcliffeWayGj = waysToGeoJSON(redcliffeWay.elements, { corridor: "Redcliffe Way" });
+    writeFileSync("public/data/redcliffe_way.geojson", JSON.stringify(redcliffeWayGj));
+    console.log(`  ${redcliffeWayGj.features.length} features written`);
+    await sleep(6000);
+
+    console.log("Fetching Redcliffe Way cycle track link (Redcliff Hill)...");
+    // Redcliff Hill was already fetched as part of Bedminster Bridges; re-fetch it standalone
+    // here so this section works even when run on its own.
+    const redcliffHill = await overpassQuery(`
+[out:json][timeout:30];
+(
+  way["name"="Redcliff Hill"]["highway"](51.440,-2.601,51.449,-2.589);
+);
+out geom;
+`);
+    const redcliffHillGj = waysToGeoJSON(redcliffHill.elements, {
+      corridor: "Redcliffe Way cycle track",
+    });
+    const cycleTrack = {
+      type: "FeatureCollection",
+      features: [
+        ...redcliffeWayGj.features.map((f) => ({
+          ...f,
+          properties: { ...f.properties, corridor: "Redcliffe Way cycle track" },
+        })),
+        ...redcliffHillGj.features,
+      ],
+    };
+    writeFileSync("public/data/redcliffe_way_cycle_track.geojson", JSON.stringify(cycleTrack));
+    console.log(`  ${cycleTrack.features.length} features written`);
+    await sleep(6000);
+  }
+
+  if (want("broadmead")) {
+    console.log("Fetching Broadmead corridor (Union St / The Horsefair / Penn St)...");
+    const broadmead = await overpassQuery(broadmeadQuery);
+    writeFileSync(
+      "public/data/broadmead.geojson",
+      JSON.stringify(waysToGeoJSON(broadmead.elements, { corridor: "Broadmead" })),
+    );
+    console.log(`  ${broadmead.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("railway-path")) {
+    console.log("Fetching Bristol & Bath Railway Path (Siston Common to Bitton Station)...");
+    const railwayPath = await overpassQuery(railwayPathQuery);
+    writeFileSync(
+      "public/data/railway_path_barriers.geojson",
+      JSON.stringify(
+        waysToGeoJSON(railwayPath.elements, { corridor: "Bristol & Bath Railway Path" }),
+      ),
+    );
+    console.log(`  ${railwayPath.elements.length} elements written`);
   }
 
   console.log("Done.");

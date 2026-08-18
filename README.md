@@ -36,7 +36,7 @@ Three layers:
   dataset shows a modified date of 2025-09-05 — current, not the 2017 snapshot the original
   research turned up.
 
-- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path}.geojson`**
+- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path,temple_way,bond_street,bond_street_cycle_route,bedminster_bridges,redcliffe_way,redcliffe_way_cycle_track,broadmead,railway_path_barriers}.geojson`**
   (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
   dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
   (First West of England / Metrobus, matched by `ref` + `network` tag). The Portishead Branch Line
@@ -48,16 +48,47 @@ Three layers:
   MetroBus extension is under construction and has no route relation either, so it's a hand-picked
   chain of street ways (Hengrove Park Leisure Centre → William Jessop Way → Hawkfield Road →
   Imperial Retail Park), with the Hawkfield Road cycle path written out separately as the segment
-  of Hawkfield Road the works cover. Re-fetch with:
+  of Hawkfield Road the works cover.
+
+  The five bristolonthemove.com city-centre schemes and the Railway Path barrier removal follow
+  the same two patterns. Where a scheme sits on one clearly-named street (or a short chain of
+  directly-adjoining named streets), it's a plain name+bbox search, same as A4 Portway — Temple
+  Way; Bond Street/Newfoundland Circus/Newfoundland Road; Union Street/The Horsefair/Penn Street
+  for Broadmead; and the Bristol & Bath Railway Path bounded to the Siston Common–Bitton Station
+  works extent (rather than the whole Bristol–Bath route relation). Bedminster Bridges is the same
+  idea but needs two extra fixes, both caught by checking the rendered line against the scheme's
+  own published plan diagrams rather than trusting the query output: Redcliff Hill and Bedminster
+  Parade don't actually join in OSM — the roundabout and twin bridges over the New Cut between them
+  carry a separate name, `Bedminster Bridge Roundabout` (with the bridge decks themselves tagged
+  `bridge=yes`), so a hand-picked way-ID chain bridges the gap the same way the m1 extension's does;
+  and East Street's name+bbox search was pulling in ~500m more of the street than the plan shows,
+  so its bbox is trimmed to stop just past the Dalby Avenue junction near Asda. "Redcliffe Way",
+  "Redcliffe Roundabout" and
+  "Redcliffe Street" all turn out to be tagged as one continuous `name=Redcliffe Way` in OSM, so
+  that's a single-name search too. Where a scheme's own cycle track is described separately from
+  its parent road works — Redcliffe Way's track (Redcliff Hill added to the parent's own
+  Redcliffe Way ways, the same "reuse the parent's ways" trick as Hawkfield Road) and Bond
+  Street's replacement route (Pembroke Street → Portland Square → Wilson Street) — it's a
+  hand-picked way-ID chain. Portland Square is one closed-loop OSM way for the whole one-way
+  square, so `bond_street_cycle_route.geojson` trims it to just the south arc actually being
+  changed, with the same `trimAtNearestNode` helper the Hawkfield Road/William Jessop Way trim
+  uses. Redcliffe Way's cycle track deliberately stops short at both ends — Temple Meads and Queen
+  Square — rather than drawing an approximate final stretch: OSM has no named way for either the
+  "Brunel Mile" pedestrian route or a specific Queen Square approach street, only the square's full
+  perimeter road, which would misrepresent the track as looping the square. Re-fetch everything
+  with:
 
   ```bash
   node scripts/fetch-osm-routes.mjs
   ```
 
-  or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`) to refresh one output
-  without re-fetching the rest. Overpass is a shared public resource — this script deliberately
-  fetches one relation at a time with a delay between requests. Don't parallelize it or run it in
-  a tight loop.
+  or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`,
+  `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`)
+  to refresh one output without re-fetching the rest — `bond-street` also refreshes
+  `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
+  `redcliffe_way_cycle_track.geojson`, since each pair is fetched together. Overpass is a shared
+  public resource — this script deliberately fetches one relation at a time with a delay between
+  requests. Don't parallelize it or run it in a tight loop.
 
 - **`public/data/south_bristol_ln_boundary.geojson`** — traced along real road centrelines
   (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint
@@ -128,10 +159,12 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
   data above, not automated fetching.
 - "City Centre transport transformation" has no natural route/boundary and stays as a point
   marker.
-- **`cycle_infra` is thin.** Only `railway-path-barriers` and `feeder-promenade` sit in it. Most
-  live cycle provision in Bristol is delivered *inside* corridor and Liveable Neighbourhood schemes
-  (the Hawkfield Road two-way track, Redcliffe Way's Temple Meads–Queen Square track, Bond Street's
-  parallel quiet route) and is categorised there rather than duplicated.
+- **`cycle_infra` entries that are cycle-specific parts of a bigger road/bus scheme are split out
+  as their own entry**, cross-referenced both ways in the description, rather than described twice
+  at length inside the parent corridor entry. `hawkfield-cycle-path` (split from
+  `m1-metrobus-extension`), `redcliffe-way-cycle-track` (split from `redcliffe-way`) and
+  `bond-street-cycle-route` (split from `bond-street`) all follow this pattern. Do the same for any
+  future scheme that bundles a distinct cycle alignment inside a corridor project.
 
   `railway-path-barriers` bends two rules deliberately, both flagged in the entry itself. Its works
   are on the **South Gloucestershire** section of the path (Siston Common to Bitton), outside the
@@ -150,10 +183,6 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
   removed (see "Deliberately excluded"). `scripts/fetch-osm-routes.mjs` still fetches it. Left in
   place rather than deleted, in case the network is wanted back as a context map layer rather than
   a project entry.
-
-- **No geometry for most newer entries.** The schemes added in the 2026-07-30 pass are point
-  markers only, apart from `feeder-promenade`; corridor lines would need OSM route extraction or a
-  published scheme boundary.
 
 ## Deliberately excluded
 
