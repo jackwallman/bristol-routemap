@@ -382,6 +382,28 @@ export const projects: Project[] = [
     coordinates: [-2.7191, 51.3827],
   },
   {
+    id: "speculative-airport-route",
+    name: "Airport mass transit route (speculative)",
+    area: "Bristol Temple Meads to Bristol Airport, via Bedminster and the A38",
+    category: "rail_metrobus",
+    status: "speculation",
+    description:
+      "WECA's Transport Vision (Feb 2026) names a link to Bristol Airport as one of two initial mass transit concepts, alongside Redcliffe Way — Bristol Airport is the only major regional airport in the UK with no fixed transit connection, reachable only by road 16km from the centre. Centre-to-airport was one of four corridors covered in WECA's first-stage business case, approved in 2024. The mode (light rail or tram-like vehicles on segregated roadways) is still undecided, no alignment has been published, and leaders have committed only to start construction within four to five years of the Feb 2026 announcement (see we-mass-transit for the fuller regional picture). The line drawn here is for illustration of a plausible corridor, not WECA's proposal — built by tracing real OpenStreetMap streets and rail (Temple Meads to the A38 via Bedminster Down Road, then Highridge and Barrow Gurney to a straight-line cut across the airport's access roundabout into the terminal). Treat the geometry as illustration, not fact.",
+    sourceName: "Transport Vision (WECA) — names the concept only; this alignment is invented",
+    sourceUrl:
+      "https://www.westofengland-ca.gov.uk/news/a-transport-network-you-can-trust-the-wests-new-transport-vision/",
+    lastUpdated: "2026-08-18",
+    highlights: [
+      "Bristol Airport is the only major UK regional airport with no fixed transit connection — 16km from the centre, road-only today",
+      "One of four corridors in WECA's 2024 first-stage business case; named as one of two initial concepts in the Feb 2026 vision",
+      "Mode still undecided (light rail or tram-like vehicles); construction targeted within four to five years of the announcement",
+      "The route shown on the map is for illustration — WECA has published no alignment",
+    ],
+    coordinates: [-2.6392752, 51.4165615],
+    geometryUrl: "/data/speculative_airport_route.geojson",
+    geometryType: "line",
+  },
+  {
     id: "bristol-school-streets",
     name: "Bristol School Streets",
     area: "Citywide (16 primary schools, more in consultation)",
