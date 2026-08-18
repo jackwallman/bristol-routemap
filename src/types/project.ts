@@ -27,6 +27,8 @@ export interface Project {
   lastUpdated: string;
   startDate?: string;
   endDate?: string;
+  /** 2-4 short bullet phrases summarising the project, for the card. Drawn from `description`, not new facts. */
+  highlights?: string[];
   /** [lon, lat] — marker position; a representative point even when geometryUrl is set */
   coordinates: [number, number];
   /** Path under /data to a GeoJSON file highlighting the actual area/route, if we have one */
@@ -55,4 +57,13 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
   underway: "Underway",
   completed: "Completed",
   unknown: "Status unknown",
+};
+
+export const STATUS_COLORS: Record<ProjectStatus, string> = {
+  proposed: "#b45309",
+  consultation: "#1d4ed8",
+  approved: "#0f766e",
+  underway: "#15803d",
+  completed: "#57534e",
+  unknown: "#4b5563",
 };
