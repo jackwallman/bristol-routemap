@@ -2,7 +2,7 @@
 // (free, no key) for corridor projects that don't have geometry published on
 // Open Data Bristol. Run with: node scripts/fetch-osm-routes.mjs
 // Pass a section name to refresh just one output without re-fetching the rest:
-// node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1)
+// node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1, henbury)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -154,6 +154,24 @@ function trimAtNearestNode(feature, [lon, lat], keep) {
     keep === "start" ? coords.slice(0, best + 1) : coords.slice(best);
 }
 
+// Henbury Line (MetroWest Phase 2): matched by Network Rail's line code
+// (ref=AFR, "Avonmouth and Filton Railway", currently freight-only) the same
+// way the Portishead line is. Clipped by explicit way ID to the Filton-Henbury
+// section the new passenger service will actually run over — the freight line
+// continues several more km past Henbury to Avonmouth Docks, which stays
+// freight-only and isn't part of this scheme. Way IDs found via:
+// way["ref"="AFR"]["railway"~"rail|construction"](51.44,-2.70,51.53,-2.55);
+// then manually filtered to those east of Henbury (lon >= -2.652).
+const henburyLineWayIds = [
+  3811884, 3994993, 4758479, 26390259, 85270457, 267053355, 310314820,
+  678488585, 678488586, 678488587, 678488590, 906775016, 906775017, 1359147113,
+];
+const henburyLineQuery = `
+[out:json][timeout:60];
+way(id:${henburyLineWayIds.join(",")});
+out geom;
+`;
+
 async function main() {
   const only = process.argv[2];
   const want = (section) => !only || only === section;
@@ -234,6 +252,17 @@ async function main() {
     };
     writeFileSync("public/data/hawkfield_cycle_path.geojson", JSON.stringify(cyclePath));
     console.log(`  cycle path written (${hawkfield.geometry.coordinates.length} nodes)`);
+    await sleep(6000);
+  }
+
+  if (want("henbury")) {
+    console.log("Fetching Henbury Line...");
+    const henbury = await overpassQuery(henburyLineQuery);
+    writeFileSync(
+      "public/data/henbury_line.geojson",
+      JSON.stringify(waysToGeoJSON(henbury.elements, { corridor: "Henbury Line" })),
+    );
+    console.log(`  ${henbury.elements.length} elements written`);
   }
 
   console.log("Done.");

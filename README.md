@@ -36,22 +36,25 @@ Three layers:
   dataset shows a modified date of 2025-09-05 — current, not the 2017 snapshot the original
   research turned up.
 
-- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,m1_extension,hawkfield_cycle_path}.geojson`**
+- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path}.geojson`**
   (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
   dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
   (First West of England / Metrobus, matched by `ref` + `network` tag). The Portishead Branch Line
-  has no route relation, so it's matched by Network Rail's line code instead (ways tagged
-  `ref=POD`), which also excludes the disused, unrelated Weston, Clevedon & Portishead Light
-  Railway. The m1 MetroBus extension is under construction and has no route relation either, so
-  it's a hand-picked chain of street ways (Hengrove Park Leisure Centre → William Jessop Way →
-  Hawkfield Road → Imperial Retail Park), with the Hawkfield Road cycle path written out separately
-  as the segment of Hawkfield Road the works cover. Re-fetch with:
+  and the Henbury Line have no route relation, so they're matched by Network Rail's line code
+  instead (ways tagged `ref=POD` and `ref=AFR` respectively) — for Portishead this also excludes
+  the disused, unrelated Weston, Clevedon & Portishead Light Railway; for Henbury, the fetched ways
+  are further filtered by way ID down to the Filton–Henbury section the new passenger service
+  actually uses, since the AFR freight line continues past Henbury to Avonmouth Docks. The m1
+  MetroBus extension is under construction and has no route relation either, so it's a hand-picked
+  chain of street ways (Hengrove Park Leisure Centre → William Jessop Way → Hawkfield Road →
+  Imperial Retail Park), with the Hawkfield Road cycle path written out separately as the segment
+  of Hawkfield Road the works cover. Re-fetch with:
 
   ```bash
   node scripts/fetch-osm-routes.mjs
   ```
 
-  or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`) to refresh one output
+  or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`) to refresh one output
   without re-fetching the rest. Overpass is a shared public resource — this script deliberately
   fetches one relation at a time with a delay between requests. Don't parallelize it or run it in
   a tight loop.
