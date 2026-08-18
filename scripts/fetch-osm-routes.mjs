@@ -1,6 +1,8 @@
 // Fetches real road/bus-route geometry from OpenStreetMap via the Overpass API
 // (free, no key) for corridor projects that don't have geometry published on
 // Open Data Bristol. Run with: node scripts/fetch-osm-routes.mjs
+// Pass a section name to refresh just one output without re-fetching the rest:
+// node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -8,16 +10,36 @@
 
 import { writeFileSync } from "node:fs";
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+// Public Overpass instances, tried in order — the main one 504s when overloaded.
+const OVERPASS_URLS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function overpassQuery(query) {
-  const res = await fetch(OVERPASS_URL, {
-    method: "POST",
-    body: "data=" + encodeURIComponent(query),
-  });
-  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
-  return res.json();
+  let lastError;
+  for (const url of OVERPASS_URLS) {
+    try {
+      // overpass-api.de rejects header-less fetch() calls with HTTP 406
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "get-about-bristol (transport project map; occasional manual re-fetch)",
+        },
+        body: "data=" + encodeURIComponent(query),
+      });
+      if (res.ok) return res.json();
+      lastError = new Error(`Overpass HTTP ${res.status} from ${url}`);
+    } catch (err) {
+      lastError = err;
+    }
+    console.warn(`  ${lastError.message ?? lastError} from ${url}, trying next instance`);
+    await sleep(2000);
+  }
+  throw lastError;
 }
 
 function waysToGeoJSON(elements, extraProps = {}) {
@@ -76,48 +98,143 @@ const portisheadLineQuery = `
 out geom;
 `;
 
+// m1 MetroBus extension (Hengrove Park Leisure Centre -> Imperial Retail Park) and the
+// Hawkfield Road cycle path built alongside it. The extension is under construction, so
+// no OSM route relation exists yet; the corridor is hand-picked street ways instead:
+// Hengrove Promenade (existing terminus) -> The Boulevard -> William Jessop Way ->
+// Butterfly Lane -> Hawkfield Road -> Hartcliffe Way link -> Hengrove Way Roundabout ->
+// Hengrove Way (one carriageway) -> Wills Way to the Imperial Retail Park entrance.
+// Re-check the alignment against the council page if the way IDs ever stop matching.
+const m1ExtensionWayIds = [
+  // Hengrove Promenade
+  137812679, 178375602, 178375616, 182930299, 1470017825,
+  // The Boulevard
+  137816743, 137816744, 143700363, 178375604, 178375613, 1367349910, 1367349911,
+  1458314807, 1458314808, 1458314809,
+  // William Jessop Way (192976609 is trimmed at the Butterfly Lane junction below)
+  192966059, 192976616, 192976609,
+  // Butterfly Lane
+  1123537426,
+  // Hawkfield Road (trimmed at the Butterfly Lane junction below)
+  106895617,
+  // Hartcliffe Way link between Hawkfield Road and the Hengrove Way Roundabout
+  40780756, 293489974,
+  // Hengrove Way Roundabout, just the arc the route crosses
+  203136414,
+  // Hengrove Way, westbound: named carriageway stub, then the unnamed trunk link and
+  // connector that join Wills Way's south end without a gap
+  23422044, 23422048, 23422051,
+  // Wills Way up to the Imperial Retail Park entrance
+  628420425, 23422052,
+];
+
+const m1ExtensionQuery = `
+[out:json][timeout:30];
+way(id:${m1ExtensionWayIds.join(",")});
+out geom;
+`;
+
+// The works run along Hawkfield Road between the Hengrove Way roundabout and Butterfly
+// Lane, so ways that continue past a junction are cut at the node nearest to it.
+const BUTTERFLY_LANE_ON_HAWKFIELD = [-2.59336, 51.40774];
+const BUTTERFLY_LANE_ON_JESSOP = [-2.59164, 51.40761];
+
+function trimAtNearestNode(feature, [lon, lat], keep) {
+  const coords = feature.geometry.coordinates;
+  let best = 0;
+  let bestDist = Infinity;
+  coords.forEach(([cLon, cLat], i) => {
+    const d = (cLon - lon) ** 2 + (cLat - lat) ** 2;
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  });
+  feature.geometry.coordinates =
+    keep === "start" ? coords.slice(0, best + 1) : coords.slice(best);
+}
+
 async function main() {
-  console.log("Fetching A4 Portway...");
-  const portway = await overpassQuery(portwayQuery);
-  writeFileSync(
-    "public/data/a4_portway.geojson",
-    JSON.stringify(waysToGeoJSON(portway.elements, { corridor: "A4 Portway" })),
-  );
-  console.log(`  ${portway.elements.length} elements written`);
-  await sleep(6000);
+  const only = process.argv[2];
+  const want = (section) => !only || only === section;
 
-  console.log("Fetching Bus Route 2...");
-  const bus2 = await overpassQuery(bus2Query);
-  writeFileSync(
-    "public/data/bus_route_2.geojson",
-    JSON.stringify(waysToGeoJSON(bus2.elements, { corridor: "Bus Route 2" })),
-  );
-  console.log(`  ${bus2.elements.length} elements written`);
-  await sleep(6000);
-
-  const metrobusFeatures = [];
-  for (const [ref, id] of Object.entries(metrobusRelations)) {
-    console.log(`Fetching MetroBus ${ref}...`);
-    const query = `[out:json][timeout:30];\nrelation(id:${id});\nout body;\n>;\nout geom qt;\n`;
-    const data = await overpassQuery(query);
-    const gj = waysToGeoJSON(data.elements, { corridor: `MetroBus ${ref}` });
-    metrobusFeatures.push(...gj.features);
-    console.log(`  ${gj.features.length} features`);
+  if (want("portway")) {
+    console.log("Fetching A4 Portway...");
+    const portway = await overpassQuery(portwayQuery);
+    writeFileSync(
+      "public/data/a4_portway.geojson",
+      JSON.stringify(waysToGeoJSON(portway.elements, { corridor: "A4 Portway" })),
+    );
+    console.log(`  ${portway.elements.length} elements written`);
     await sleep(6000);
   }
-  writeFileSync(
-    "public/data/metrobus_network.geojson",
-    JSON.stringify({ type: "FeatureCollection", features: metrobusFeatures }),
-  );
-  await sleep(6000);
 
-  console.log("Fetching Portishead Branch Line...");
-  const portishead = await overpassQuery(portisheadLineQuery);
-  writeFileSync(
-    "public/data/portishead_line.geojson",
-    JSON.stringify(waysToGeoJSON(portishead.elements, { corridor: "Portishead Branch Line" })),
-  );
-  console.log(`  ${portishead.elements.length} elements written`);
+  if (want("bus2")) {
+    console.log("Fetching Bus Route 2...");
+    const bus2 = await overpassQuery(bus2Query);
+    writeFileSync(
+      "public/data/bus_route_2.geojson",
+      JSON.stringify(waysToGeoJSON(bus2.elements, { corridor: "Bus Route 2" })),
+    );
+    console.log(`  ${bus2.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("metrobus")) {
+    const metrobusFeatures = [];
+    for (const [ref, id] of Object.entries(metrobusRelations)) {
+      console.log(`Fetching MetroBus ${ref}...`);
+      const query = `[out:json][timeout:30];\nrelation(id:${id});\nout body;\n>;\nout geom qt;\n`;
+      const data = await overpassQuery(query);
+      const gj = waysToGeoJSON(data.elements, { corridor: `MetroBus ${ref}` });
+      metrobusFeatures.push(...gj.features);
+      console.log(`  ${gj.features.length} features`);
+      await sleep(6000);
+    }
+    writeFileSync(
+      "public/data/metrobus_network.geojson",
+      JSON.stringify({ type: "FeatureCollection", features: metrobusFeatures }),
+    );
+    await sleep(6000);
+  }
+
+  if (want("portishead")) {
+    console.log("Fetching Portishead Branch Line...");
+    const portishead = await overpassQuery(portisheadLineQuery);
+    writeFileSync(
+      "public/data/portishead_line.geojson",
+      JSON.stringify(waysToGeoJSON(portishead.elements, { corridor: "Portishead Branch Line" })),
+    );
+    console.log(`  ${portishead.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("m1")) {
+    console.log("Fetching m1 MetroBus extension corridor...");
+    const m1 = await overpassQuery(m1ExtensionQuery);
+    const extension = waysToGeoJSON(m1.elements, { corridor: "m1 MetroBus extension" });
+
+    const hawkfield = extension.features.find((f) => f.properties.osm_id === 106895617);
+    const jessop = extension.features.find((f) => f.properties.osm_id === 192976609);
+    // Hawkfield Road's way starts at its north end; William Jessop Way's at its north-east end.
+    trimAtNearestNode(hawkfield, BUTTERFLY_LANE_ON_HAWKFIELD, "start");
+    trimAtNearestNode(jessop, BUTTERFLY_LANE_ON_JESSOP, "start");
+    writeFileSync("public/data/m1_extension.geojson", JSON.stringify(extension));
+    console.log(`  ${extension.features.length} features written`);
+
+    // The cycle path is the same Hawkfield Road segment, as its own file.
+    const cyclePath = {
+      type: "FeatureCollection",
+      features: [
+        {
+          ...hawkfield,
+          properties: { ...hawkfield.properties, corridor: "Hawkfield Road cycle path" },
+        },
+      ],
+    };
+    writeFileSync("public/data/hawkfield_cycle_path.geojson", JSON.stringify(cyclePath));
+    console.log(`  cycle path written (${hawkfield.geometry.coordinates.length} nodes)`);
+  }
 
   console.log("Done.");
 }
