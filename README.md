@@ -36,13 +36,16 @@ Three layers:
   dataset shows a modified date of 2025-09-05 — current, not the 2017 snapshot the original
   research turned up.
 
-- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line}.geojson`**
+- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line}.geojson`**
   (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
   dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
   (First West of England / Metrobus, matched by `ref` + `network` tag). The Portishead Branch Line
-  has no route relation, so it's matched by Network Rail's line code instead (ways tagged
-  `ref=POD`), which also excludes the disused, unrelated Weston, Clevedon & Portishead Light
-  Railway. Re-fetch with:
+  and the Henbury Line have no route relation, so they're matched by Network Rail's line code
+  instead (ways tagged `ref=POD` and `ref=AFR` respectively) — for Portishead this also excludes
+  the disused, unrelated Weston, Clevedon & Portishead Light Railway; for Henbury, the fetched ways
+  are further filtered by way ID down to the Filton–Henbury section the new passenger service
+  actually uses, since the AFR freight line continues past Henbury to Avonmouth Docks. Re-fetch
+  with:
 
   ```bash
   node scripts/fetch-osm-routes.mjs

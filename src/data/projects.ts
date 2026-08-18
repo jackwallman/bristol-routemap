@@ -181,6 +181,64 @@ export const projects: Project[] = [
     geometryType: "line",
   },
   {
+    id: "metrowest-henbury-line",
+    name: "MetroWest Phase 2: Henbury line",
+    area: "Filton / Horfield / Southmead / Henbury",
+    category: "rail_metrobus",
+    status: "underway",
+    description:
+      "Reopens the freight-only Filton–Henbury branch (Network Rail's Avonmouth and Filton Railway, no passenger trains since 1964) to an hourly Bristol Temple Meads ↔ Henbury service calling at Lawrence Hill, Stapleton Road, Ashley Down, Filton Abbey Wood and two new stations: Bristol Brabazon and Henbury. Ashley Down opened 27 September 2024. Bristol Brabazon — built on the former Filton Airfield and renamed from 'North Filton' in March 2026 — opens in two stages: a smaller Stage 1 station in autumn 2026 to serve the growing Brabazon neighbourhood (6,500 homes, 30,000 jobs) and its new arena, then a fuller station alongside Henbury's single-platform stop in March 2028. It puts a station within reach of Filton, Horfield, Southmead and Henbury for the first time, and gets Brabazon's rail link built ahead of its residents rather than after. Full Business Case for both new stations approved October 2025; delivered by WECA with Network Rail, Bristol City Council, South Gloucestershire Council and North Somerset Council funding. Point marker at Bristol Brabazon, the next station due to open. Highlighted line is the branch's real track geometry via OpenStreetMap (ways tagged ref=AFR, Network Rail's code for the Avonmouth and Filton Railway), clipped by way ID to the Filton–Henbury section the new passenger service will actually run over — the freight line continues several more km past Henbury to Avonmouth Docks, which stays freight-only and isn't drawn.",
+    sourceName: "Bristol Brabazon & Henbury stations (Travelwest)",
+    sourceUrl:
+      "https://travelwest.info/projects/bristol-brabazon-and-henbury-train-stations/",
+    extraLinks: [
+      {
+        name: "Bristol Brabazon station construction updates (Network Rail)",
+        url: "https://www.networkrail.co.uk/our-work/our-routes/western/metrowest-rail-upgrades/bristol-brabazon-station/",
+      },
+    ],
+    lastUpdated: "2026-08-18",
+    startDate: "Ashley Down opened Sep 2024",
+    endDate: "Bristol Brabazon & Henbury full stations, Mar 2028",
+    highlights: [
+      "Reopens the Filton–Henbury freight branch to hourly Bristol Temple Meads ↔ Henbury passenger trains",
+      "Two new stations: Bristol Brabazon (former Filton Airfield, opening autumn 2026) and Henbury (Mar 2028)",
+      "Ashley Down, the line's third new station, already opened 27 September 2024",
+      "Gives Filton, Horfield, Southmead and Henbury a station where none exists today",
+    ],
+    coordinates: [-2.5840, 51.5145],
+    geometryUrl: "/data/henbury_line.geojson",
+    geometryType: "line",
+  },
+  {
+    id: "metrowest-charfield",
+    name: "MetroWest Phase 2: Charfield station",
+    area: "Charfield (South Gloucestershire)",
+    category: "rail_metrobus",
+    status: "underway",
+    description:
+      "New station in the centre of Charfield, on the Bristol–Gloucester line, which lost its last station in 1965. Hourly trains each way will put roughly 14,500 residents within three miles of the rail network for the first time in 60 years — about 32 minutes to Bristol Temple Meads, 22 to Gloucester — part of MetroWest Phase 2's wider move to half-hourly Bristol–Gloucester services via Yate. Construction started August 2025; platforms and the footbridge were in place by May 2026, and opening is due spring 2027. £41.7m funded by WECA via the City Region Sustainable Transport Settlement, delivered by South Gloucestershire Council with Network Rail and contractor Octavius. Charfield sits well outside Bristol's boundary, but is included as part of the Bristol–Gloucester commuter corridor Phase 2 upgrades.",
+    sourceName: "New Charfield station (South Gloucestershire Council)",
+    sourceUrl:
+      "https://sites.southglos.gov.uk/newsroom/transport/new-charfield-station-will-connect-thousands-in-local-villages-to-the-national-rail-network",
+    startDate: "Construction started Aug 2025",
+    endDate: "Opening spring 2027",
+    highlights: [
+      "New station in Charfield, on the Bristol–Gloucester line, which lost its last station in 1965",
+      "Hourly trains each way — ~32 minutes to Bristol Temple Meads, 22 to Gloucester",
+      "Puts ~14,500 residents within three miles of the rail network for the first time in 60 years",
+      "Part of MetroWest Phase 2's move to half-hourly Bristol–Gloucester services via Yate",
+    ],
+    extraLinks: [
+      {
+        name: "Construction progress update, May 2026 (WECA)",
+        url: "https://www.westofengland-ca.gov.uk/news/new-charfield-station-on-track-to-open-in-spring-2027/",
+      },
+    ],
+    lastUpdated: "2026-08-18",
+    coordinates: [-2.3980, 51.6825],
+  },
+  {
     id: "m1-metrobus-extension",
     name: "m1 MetroBus extension & active travel improvements",
     area: "Hengrove Park / Hawkfield Road / Imperial Retail Park",

@@ -76,6 +76,24 @@ const portisheadLineQuery = `
 out geom;
 `;
 
+// Henbury Line (MetroWest Phase 2): matched by Network Rail's line code
+// (ref=AFR, "Avonmouth and Filton Railway", currently freight-only) the same
+// way the Portishead line is. Clipped by explicit way ID to the Filton-Henbury
+// section the new passenger service will actually run over — the freight line
+// continues several more km past Henbury to Avonmouth Docks, which stays
+// freight-only and isn't part of this scheme. Way IDs found via:
+// way["ref"="AFR"]["railway"~"rail|construction"](51.44,-2.70,51.53,-2.55);
+// then manually filtered to those east of Henbury (lon >= -2.652).
+const henburyLineWayIds = [
+  3811884, 3994993, 4758479, 26390259, 85270457, 267053355, 310314820,
+  678488585, 678488586, 678488587, 678488590, 906775016, 906775017, 1359147113,
+];
+const henburyLineQuery = `
+[out:json][timeout:60];
+way(id:${henburyLineWayIds.join(",")});
+out geom;
+`;
+
 async function main() {
   console.log("Fetching A4 Portway...");
   const portway = await overpassQuery(portwayQuery);
@@ -118,6 +136,15 @@ async function main() {
     JSON.stringify(waysToGeoJSON(portishead.elements, { corridor: "Portishead Branch Line" })),
   );
   console.log(`  ${portishead.elements.length} elements written`);
+  await sleep(6000);
+
+  console.log("Fetching Henbury Line...");
+  const henbury = await overpassQuery(henburyLineQuery);
+  writeFileSync(
+    "public/data/henbury_line.geojson",
+    JSON.stringify(waysToGeoJSON(henbury.elements, { corridor: "Henbury Line" })),
+  );
+  console.log(`  ${henbury.elements.length} elements written`);
 
   console.log("Done.");
 }
