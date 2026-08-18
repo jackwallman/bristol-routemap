@@ -10,7 +10,8 @@ export type ProjectStatus =
   | "approved"
   | "underway"
   | "completed"
-  | "unknown";
+  | "unknown"
+  | "speculation";
 
 export interface Project {
   id: string;
@@ -57,6 +58,7 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
   underway: "Underway",
   completed: "Completed",
   unknown: "Status unknown",
+  speculation: "Speculation",
 };
 
 export const STATUS_COLORS: Record<ProjectStatus, string> = {
@@ -66,4 +68,5 @@ export const STATUS_COLORS: Record<ProjectStatus, string> = {
   underway: "#15803d",
   completed: "#57534e",
   unknown: "#4b5563",
+  speculation: "#a21caf",
 };
