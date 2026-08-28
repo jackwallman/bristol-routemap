@@ -51,7 +51,7 @@ Three layers:
   location (Hartcliffe Road–Airport Road) matches the funded reCREATE Filwood scheme; the other two
   run south into Hartcliffe/Symes Avenue with no matching published scheme (see "Not yet built").
 
-- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path,temple_way,bond_street,bond_street_cycle_route,bedminster_bridges,redcliffe_way,redcliffe_way_cycle_track,broadmead,railway_path_barriers}.geojson`**
+- **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path,temple_way,bond_street,bond_street_cycle_route,bedminster_bridges,redcliffe_way,redcliffe_way_cycle_track,broadmead,railway_path_barriers,bristol_school_streets}.geojson`**
   (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
   dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
   (First West of England / Metrobus, matched by `ref` + `network` tag). The Portishead Branch Line
@@ -90,20 +90,34 @@ Three layers:
   uses. Redcliffe Way's cycle track deliberately stops short at both ends — Temple Meads and Queen
   Square — rather than drawing an approximate final stretch: OSM has no named way for either the
   "Brunel Mile" pedestrian route or a specific Queen Square approach street, only the square's full
-  perimeter road, which would misrepresent the track as looping the square. Re-fetch everything
-  with:
+  perimeter road, which would misrepresent the track as looping the square.
+
+  Bristol School Streets (`bristol_school_streets.geojson`) is a different shape: 21 independent
+  schemes, each closing a named street (or short chain of streets) outside one school's gates, so
+  the output is 21 scattered short segments across the city rather than one corridor. Street names
+  and boundary junctions are read off each school's own Travelwest page (one page per school,
+  linked from the index page), not the summary page itself. Most are a plain name+bbox search per
+  school; where a scheme's own page names a sub-section of a longer street (Chester Park Junior's
+  Abingdon Road, St Werburgh's Mogg Street, Whitehall's Johnsons Lane/Road, Minerva's The
+  Greenway/Cherry Tree Crescent, Glenfrome's Sir John's Lane, Oasis Marksbury Road's Oakhill Drive)
+  the bbox is tightened to that section's own boundary junctions, the same "let the bbox pick out
+  just the way segments in that span" technique East Street and the Railway Path use, rather than
+  hand-picking way IDs. OSM tags "Sir John's Lane" both with and without the apostrophe, so both
+  spellings are queried. Re-fetch everything with:
 
   ```bash
   node scripts/fetch-osm-routes.mjs
   ```
 
   or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`,
-  `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`)
-  to refresh one output without re-fetching the rest — `bond-street` also refreshes
-  `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
+  `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`,
+  `school-streets`) to refresh one output without re-fetching the rest — `bond-street` also
+  refreshes `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
   `redcliffe_way_cycle_track.geojson`, since each pair is fetched together. Overpass is a shared
   public resource — this script deliberately fetches one relation at a time with a delay between
-  requests. Don't parallelize it or run it in a tight loop.
+  requests. Don't parallelize it or run it in a tight loop. `school-streets` is resumable: schools
+  already present in the output file are skipped on re-run, so a run that dies partway (Overpass's
+  public instances are occasionally all down at once) can just be re-run rather than starting over.
 
 - **`public/data/south_bristol_ln_boundary.geojson`** — traced along real road centrelines
   (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint

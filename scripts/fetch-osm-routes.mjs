@@ -3,13 +3,14 @@
 // Open Data Bristol. Run with: node scripts/fetch-osm-routes.mjs
 // Pass a section name to refresh just one output without re-fetching the rest:
 // node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1,
-// henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path)
+// henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path,
+// school-streets)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
 // time with a delay between requests. Don't parallelize it.
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 // Public Overpass instances, tried in order — the main one 504s when overloaded.
 const OVERPASS_URLS = [
@@ -302,6 +303,58 @@ const railwayPathQuery = `
 out geom;
 `;
 
+// Bristol School Streets: each launched/proposed scheme closes a named street (or short chain of
+// streets) immediately outside its school gates. Streets and boundary junctions come from each
+// school's own Travelwest project page (travelwest.info/projects/bristol-school-streets-*); bboxes
+// are hand-picked per school (school coordinate ± a few hundred metres, or the two boundary
+// junctions ± a small buffer for streets whose closure is only *part* of a longer road) using the
+// same "let a tight bbox pick out just the OSM way segments in that span" technique as East Street
+// and the Railway Path barrier removal — most residential streets here are split into several way
+// IDs at each side junction, so bounding the query to the closure's own junctions is enough without
+// hand-picking way IDs. "Cherry Tree Crescent" is OSM's spelling (Travelwest's page drops the
+// space); everything else matches the source page's own street names.
+const schoolStreetGroups = [
+  { school: "Wansdyke Primary School", streets: ["School Close"], bbox: [51.4006, -2.5899, 51.4126, -2.5699] },
+  { school: "St Peter's CofE Primary School", streets: ["Ellfield Close"], bbox: [51.4108, -2.632, 51.4228, -2.612] },
+  { school: "Redfield Educate Together Primary Academy", streets: ["Victoria Avenue"], bbox: [51.4518, -2.5654, 51.4638, -2.5454] },
+  { school: "Victoria Park Primary School", streets: ["Atlas Road", "Raymend Road"], bbox: [51.4308, -2.5981, 51.4428, -2.5781] },
+  // Abingdon Road, bounded to just the Moorlands Road-Acton Road span the source names.
+  { school: "Chester Park Junior School", streets: ["Abingdon Road"], bbox: [51.4712, -2.533, 51.474, -2.5295] },
+  // The Greenway (Hillfields Avenue-Summerleaze) and Cherry Tree Crescent (The Greenway-Cherry
+  // Tree Road), both bounded to the spans the source names.
+  { school: "Minerva Primary Academy", streets: ["The Greenway", "Cherry Tree Crescent"], bbox: [51.4708, -2.5185, 51.4756, -2.5138] },
+  // Johnsons Lane and Johnsons Road, each bounded at the physical-barrier junction the source
+  // names (Oakleigh Avenue, Stepney Road); Woodcroft Avenue is unbounded (no trim named).
+  { school: "Whitehall Primary School", streets: ["Johnsons Lane", "Johnsons Road", "Woodcroft Avenue"], bbox: [51.4625, -2.558, 51.466, -2.552] },
+  { school: "Cathedral Primary School and Bristol Cathedral Choir School", streets: ["College Square"], bbox: [51.4472, -2.6064, 51.4552, -2.5944] },
+  { school: "St Bernadette Catholic Primary School", streets: ["Gladstone Road"], bbox: [51.4101, -2.5739, 51.4221, -2.5539] },
+  { school: "Ashley Down Primary School", streets: ["Olveston Road"], bbox: [51.4776, -2.5952, 51.4896, -2.5752] },
+  { school: "Fair Furlong Primary School", streets: ["Vowell Close"], bbox: [51.4017, -2.6215, 51.4137, -2.6015] },
+  { school: "Ashton Gate Primary School", streets: ["Upton Road"], bbox: [51.4369, -2.6196, 51.4489, -2.5996] },
+  // Mogg Street, bounded to the James Street-Cleave Street span the source names; John Street
+  // unbounded.
+  { school: "St Werburgh's Primary School", streets: ["Mogg Street", "John Street"], bbox: [51.4685, -2.576, 51.4705, -2.5725] },
+  { school: "Oasis Academy Bank Leaze", streets: ["Corbet Close"], bbox: [51.5015, -2.6616, 51.5135, -2.6416] },
+  { school: "Headley Park Primary School", streets: ["Headley Park Avenue"], bbox: [51.414, -2.619, 51.426, -2.599] },
+  { school: "Shirehampton Primary School", streets: ["Springfield Avenue"], bbox: [51.4858, -2.6845, 51.4888, -2.6745] },
+  { school: "Blaise Primary and Nursery", streets: ["Clavell Road"], bbox: [51.5005, -2.635, 51.5125, -2.615] },
+  // Cottisford Road, Parkside Gardens and South Hayes (unbounded) plus Sir John's Lane, bounded up
+  // to the Heyford Avenue junction the source names. OSM tags this street both with and without
+  // the apostrophe, so both spellings are queried. Proposed, not yet built.
+  { school: "Glenfrome Primary School", streets: ["Cottisford Road", "Parkside Gardens", "South Hayes", "Sir John's Lane", "Sir Johns Lane"], bbox: [51.4765, -2.566, 51.48, -2.56] },
+  { school: "Our Lady of the Rosary RC Primary School", streets: ["Tide Grove"], bbox: [51.4927, -2.6715, 51.5047, -2.6515] },
+  // Oakhill Drive, bounded to the Marksbury Road-Timsbury Road span the source names (permanent
+  // closure at the school end, timed closure the rest of the way to Timsbury Road).
+  { school: "Oasis Academy Marksbury Road", streets: ["Oakhill Drive"], bbox: [51.4325, -2.592, 51.435, -2.588] },
+  { school: "May Park Primary School", streets: ["Coombe Road", "Freeland Buildings", "East Park"], bbox: [51.4656, -2.5675, 51.4776, -2.5475] },
+];
+
+function schoolStreetsQuery({ streets, bbox }) {
+  const bboxStr = bbox.join(",");
+  const clauses = streets.map((s) => `  way["name"="${s}"]["highway"](${bboxStr});`).join("\n");
+  return `[out:json][timeout:30];\n(\n${clauses}\n);\nout geom;\n`;
+}
+
 async function main() {
   const only = process.argv[2];
   const want = (section) => !only || only === section;
@@ -507,6 +560,45 @@ out geom;
       ),
     );
     console.log(`  ${railwayPath.elements.length} elements written`);
+  }
+
+  if (want("school-streets")) {
+    // Resumable: schools already present in an existing output file are skipped, so a run that
+    // dies partway (Overpass's shared public instances are occasionally all down at once) can
+    // just be re-run rather than losing everything already fetched.
+    const outPath = "public/data/bristol_school_streets.geojson";
+    let schoolStreetFeatures = [];
+    try {
+      schoolStreetFeatures = JSON.parse(readFileSync(outPath, "utf8")).features;
+    } catch {
+      // no existing file
+    }
+    const done = new Set(schoolStreetFeatures.map((f) => f.properties.school));
+    for (const group of schoolStreetGroups) {
+      if (done.has(group.school)) {
+        console.log(`Skipping ${group.school} (already fetched)`);
+        continue;
+      }
+      console.log(`Fetching ${group.school} (${group.streets.join(", ")})...`);
+      let data;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          data = await overpassQuery(schoolStreetsQuery(group));
+          break;
+        } catch (err) {
+          if (attempt >= 3) throw err;
+          console.warn(`  attempt ${attempt} failed (${err.message ?? err}), retrying in 15s...`);
+          await sleep(15000);
+        }
+      }
+      const gj = waysToGeoJSON(data.elements, { corridor: "Bristol School Streets", school: group.school });
+      if (gj.features.length === 0) console.warn(`  WARNING: no ways found for ${group.school}`);
+      schoolStreetFeatures.push(...gj.features);
+      console.log(`  ${gj.features.length} features`);
+      writeFileSync(outPath, JSON.stringify({ type: "FeatureCollection", features: schoolStreetFeatures }));
+      await sleep(6000);
+    }
+    console.log(`  ${schoolStreetFeatures.length} total features written`);
   }
 
   console.log("Done.");
