@@ -332,6 +332,8 @@ export function MapView({
     markersRef.current = {};
 
     projects.forEach((project) => {
+      if (project.geometryUrl) return;
+
       const el = document.createElement("button");
       el.className = "map-marker";
       el.style.backgroundColor = CATEGORY_COLORS[project.category] ?? "#555";
