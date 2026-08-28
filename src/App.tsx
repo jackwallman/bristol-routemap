@@ -8,8 +8,8 @@ import "./App.css";
 const ALL_CATEGORIES: ProjectCategory[] = [
   "liveable_neighbourhood",
   "cycle_infra",
-  "major_corridor",
-  "rail_metrobus",
+  "bus_routes",
+  "rail",
 ];
 
 function App() {

@@ -1,8 +1,8 @@
 export type ProjectCategory =
   | "liveable_neighbourhood"
   | "cycle_infra"
-  | "major_corridor"
-  | "rail_metrobus";
+  | "bus_routes"
+  | "rail";
 
 export type ProjectStatus =
   | "proposed"
@@ -40,15 +40,15 @@ export interface Project {
 export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   liveable_neighbourhood: "Liveable Neighbourhoods",
   cycle_infra: "Cycle infrastructure",
-  major_corridor: "Major corridors",
-  rail_metrobus: "Rail / MetroBus",
+  bus_routes: "Bus routes",
+  rail: "Rail",
 };
 
 export const CATEGORY_COLORS: Record<ProjectCategory, string> = {
   liveable_neighbourhood: "#2e7d32",
   cycle_infra: "#1565c0",
-  major_corridor: "#c62828",
-  rail_metrobus: "#6a1b9a",
+  bus_routes: "#c62828",
+  rail: "#6a1b9a",
 };
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {

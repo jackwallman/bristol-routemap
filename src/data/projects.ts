@@ -69,7 +69,7 @@ export const projects: Project[] = [
     id: "bus-route-2",
     name: "Bus Route 2 corridor",
     area: "A37 / A4018 (Stockwood ↔ Cribbs Causeway)",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "underway",
     description:
       "Bus priority and street improvements along the number 2's corridor on the A37 and A4018, plus public realm work and better crossings for people on foot, wheeling and cycling. The aim is more reliable bus journeys end-to-end rather than a faster single junction, making the switch from driving worthwhile and easing congestion and air quality on two of the city's busiest radial roads. Construction updates are published on the project page. The highlighted line is the route's actual path via OpenStreetMap (Cribbs Causeway ↔ Stockwood) — useful for orientation, but which sections are built versus still to come needs checking against the construction updates.",
@@ -89,7 +89,7 @@ export const projects: Project[] = [
     id: "a4-portway-corridor",
     name: "A4 Portway corridor",
     area: "Avon Gorge / Portway (Sea Mills to city centre)",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "underway",
     description:
       "Transport corridor scheme on the A4 Portway: new 24-hour bus lanes, reduced speed limits, junction improvements, and more green space and tree planting where the gorge allows. Because the bus lanes run around the clock rather than at peak only, buses stay out of queues on the main western approach into the city all day, which makes journey times predictable; the speed and junction work is what makes the route usable on foot and by bike rather than a motor-traffic-only corridor. Weeknight resurfacing between Hotwell Road and Park Road ran 27 July to 26 October 2026. The highlighted line is the Portway's real road geometry via OpenStreetMap, Cumberland Basin out to Sea Mills.",
@@ -110,7 +110,7 @@ export const projects: Project[] = [
     id: "city-centre-changes",
     name: "City Centre transport transformation",
     area: "City centre (Broadmead, Redcliffe, Temple, Bedminster Bridges, Bond Street)",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "underway",
     description:
       "Umbrella programme reworking the centre's streets ahead of major housing and retail development, delivered as five schemes: Broadmead, Redcliffe Way, Temple Way, Bedminster Bridges and Bond Street. Twenty-five bus services move off Broadmead's busiest shopping streets from 30 August 2026, and the road layout is being prepared for a mostly segregated rapid transit route between Long Ashton Park & Ride and UWE's Frenchay campus running through the centre. The point is to stop the centre working as a place buses and through-traffic grind across: taking buses off pedestrian-heavy shopping streets speeds them up and makes Broadmead walkable, while Temple Way and Bedminster Bridges fix the walking, wheeling and cycling approaches into the centre from Temple Meads and south Bristol. No single route or boundary to draw, so this stays a point marker.",
@@ -130,7 +130,7 @@ export const projects: Project[] = [
     id: "broadmead",
     name: "Broadmead",
     area: "Broadmead / Old City",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "proposed",
     description:
       "Reworking Broadmead's streets and public spaces ahead of roughly 5,000 more people living in and travelling around the area: over 11 tennis courts' worth of new pedestrian priority space, more than 1km of new separated cycling routes, new taxi ranks and upgraded bus stops. Traffic is reduced on The Horsefair and Penn Street by closing their access from Union Street and creating new access from Haymarket instead — an interim step before the streets and public space are rebuilt once Debenhams is demolished and redeveloped. Union Street itself becomes pedestrian priority, losing its bus stops and parking, with bus services on it cut back to the new rapid transit route plus the 1, 2 and 2a northbound. New two-way cycle routes are also proposed between St James Barton Roundabout and the Harbourside, and between St James Barton Roundabout and Castle Park, including removing traffic from the Broadmead shopping street itself between Silver Street and Union Street. The point is that a shopping district absorbing thousands of new residents can't also work as a through-route — this reallocates the space before the demand arrives rather than after. Bus services move off these streets from 30 August 2026 (see city-centre-changes); Phase 1 work is complete, Phase 2 early works and the bus route change follow through 2026, with main construction from 2027. Highlighted line is Union Street, The Horsefair and Penn Street's OSM centrelines — the connected chain of streets losing through-traffic; the separate St James Barton–Harbourside/Castle Park cycle routes and the Broadmead shopping street itself aren't drawn.",
@@ -153,7 +153,7 @@ export const projects: Project[] = [
     id: "redcliffe-way",
     name: "Redcliffe Way",
     area: "Redcliffe Way / Redcliffe Roundabout / Redcliffe Street",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "proposed",
     description:
       "Rebuild of Redcliffe Way, Redcliffe Roundabout and Redcliffe Street: wider decluttered pavements, signalised crossings across the roundabout with separate paths for pedestrians and cyclists, extended bus lanes, new bus gates on Redcliffe Street near Portwall Lane, a new Phippen Street junction keeping general traffic access via Victoria Street, upgraded shelters with real-time information, traffic calming at Pump Lane, Portwall Lane and Redcliffe Parade East, and a 20mph limit. A separated cycle track runs the length of the scheme with links to Queen Square and Redcliff Hill — full alignment in its own entry (see redcliffe-way-cycle-track). Extending the bus lanes completes a loop around the city centre, which means people can change buses without first travelling into the middle — a network change, not just a faster segment. The Redcliffe Street bus gates are what make a future Long Ashton Park & Ride ↔ Union Street ↔ UWE Frenchay rapid transit route possible. Consulted on in summer 2024; some early work has started (the Redcliff Hill subway is closed ahead of planting and the new cycle path), with main construction expected from early 2027, built in phases alongside the neighbouring Bedminster Bridges scheme. Highlighted line is Redcliffe Way's OSM centreline — 'Redcliffe Way', 'Redcliffe Roundabout' and 'Redcliffe Street' are all tagged as one continuous named way in OpenStreetMap, from Redcliff Hill in the west to Temple Circus/Victoria Street in the east.",
@@ -199,7 +199,7 @@ export const projects: Project[] = [
     id: "temple-way",
     name: "Temple Way",
     area: "Temple Way (Old Market Roundabout to Friary)",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "underway",
     description:
       "Construction is under way on Temple Way from Old Market Roundabout down to the Friary junction just before Temple Meads: new northbound and southbound bus lanes either side of the roundabout, a two-way separated cycle lane the same length starting at the roundabout's Stag and Hounds corner, at least 2m of pavement throughout, and a new pedestrian and cycle crossing across Temple Way at Avon Street. Temple Way is the main approach between Temple Meads and the city centre, so making it reliable for buses and safe to walk or cycle turns what is currently a severance people avoid into a route they'll actually use. Construction started December 2025 and is expected to take up to 12 months, working from the southern end near Friary northwards. Highlighted line is Temple Way's OSM centreline between Old Market Roundabout and Friary.",
@@ -222,7 +222,7 @@ export const projects: Project[] = [
     id: "bedminster-bridges",
     name: "Bedminster Bridges",
     area: "Bedminster Bridges / Bedminster Parade / Redcliff Hill / East Street",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "proposed",
     description:
       "Removes Bedminster Bridges Roundabout and makes each of the twin bridges two-way — one bus-only, one general traffic — across a scheme spanning Redcliff Hill, Bedminster Parade and East Street. Separated cycle paths join up to existing routes (including a new link to Whitehouse Street and a separated lane from York Road to Coronation Road), pedestrians only need to cross two roads north–south instead of four, the Redcliff Hill underpass is removed and replaced with new public space at street level, and 20mph is extended onto Coronation Road (up to Gaol Ferry Bridge), Wapping Road and Cumberland Road. Splitting buses onto their own bridge takes them out of the roundabout queue entirely rather than giving them priority within it, and the crossing and underpass changes fix what is currently a hostile gap between south Bristol and the centre. This is the main gateway from Bedminster, Southville and the rest of south Bristol into the city centre. Preparatory work (utility surveys, some tree removal ahead of nesting season) ran early 2026; main construction on the roundabout and twin bridges is planned to start early 2027, built in phases alongside the neighbouring Redcliffe Way scheme. Highlighted line is Redcliff Hill, Bedminster Parade and East Street's OSM centrelines, bridged through the roundabout by OSM's separately-named 'Bedminster Bridge Roundabout' ways (which include the twin bridge decks themselves, tagged bridge=yes) so the line actually crosses the New Cut rather than stopping at each bank. East Street is trimmed to just north of the Dalby Avenue junction near Asda, matching the scheme's own published plan diagram — the untrimmed OSM way continues much further into Bedminster's high street, well beyond these works. Commercial Road, Coronation Road, York Road and Clarence Road, the roundabout's other arms shown on the same plan, aren't drawn.",
@@ -245,7 +245,7 @@ export const projects: Project[] = [
     id: "bond-street",
     name: "Bond Street",
     area: "St James Barton Roundabout / Bond Street / Newfoundland Circus",
-    category: "major_corridor",
+    category: "bus_routes",
     status: "proposed",
     description:
       "Proposed bus lanes in both directions on Bond Street, covering the east side of St James Barton Roundabout, the Bond Street South junction, Newfoundland Circus and Newfoundland Road, to speed up buses between the roundabout and the M32. Also new traffic lights letting inbound buses move between bus lanes near the M32, road humps, a new pedestrian crossing on Bond Street near the roundabout, and a widened Newfoundland Circus carriageway into the Cabot Circus car park entrance. The outbound bus lane takes the space of the existing on-road cycle lane; its replacement — a two-way cycle route on quieter parallel streets — has its own entry (see bond-street-cycle-route). The council is still developing the funding business case; if approved, construction is expected to start summer 2027 and take around a year. Highlighted line is Bond Street, Newfoundland Circus and Newfoundland Road's OSM centrelines from St James Barton Roundabout to the M32 approach.",
@@ -289,7 +289,7 @@ export const projects: Project[] = [
     id: "metrowest-portishead",
     name: "MetroWest Phase 1: Portishead line",
     area: "Portishead / Pill / Bristol Temple Meads",
-    category: "rail_metrobus",
+    category: "rail",
     status: "underway",
     description:
       "Reopening 14km of disused railway between Portishead and Bristol to passenger service, with new stations at Portishead and Pill and car parking, plus service improvements on the Severn Beach and Bath lines. It connects around 50,000 people to the rail network who have no station today and improves services for a further 180,000 living within 1km of existing stations — Portishead is currently a town of that size reachable only by a congested road. The Department for Transport approved it in July 2025; early works started autumn 2025 with main construction from spring/summer 2026, and trains are expected to run hourly to Temple Meads from 2028. Delivered jointly by WECA and North Somerset Council. Highlighted line is the branch's real track geometry via OpenStreetMap (ways tagged ref=POD, Network Rail's code for the line), Portishead to its junction with the Bristol–Exeter mainline near Parson Street — a mix of railway=rail and railway=construction (track currently being relaid for reopening).",
@@ -318,7 +318,7 @@ export const projects: Project[] = [
     id: "metrowest-henbury-line",
     name: "MetroWest Phase 2: Henbury line",
     area: "Filton / Horfield / Southmead / Henbury",
-    category: "rail_metrobus",
+    category: "rail",
     status: "underway",
     description:
       "Reopens the freight-only Filton–Henbury branch (Network Rail's Avonmouth and Filton Railway, no passenger trains since 1964) to an hourly Bristol Temple Meads ↔ Henbury service calling at Lawrence Hill, Stapleton Road, Ashley Down, Filton Abbey Wood and two new stations: Bristol Brabazon and Henbury. Ashley Down opened 27 September 2024. Bristol Brabazon — built on the former Filton Airfield and renamed from 'North Filton' in March 2026 — opens in two stages: a smaller Stage 1 station in autumn 2026 to serve the growing Brabazon neighbourhood (6,500 homes, 30,000 jobs) and its new arena, then a fuller station alongside Henbury's single-platform stop in March 2028. It puts a station within reach of Filton, Horfield, Southmead and Henbury for the first time, and gets Brabazon's rail link built ahead of its residents rather than after. Full Business Case for both new stations approved October 2025; delivered by WECA with Network Rail, Bristol City Council, South Gloucestershire Council and North Somerset Council funding. Point marker at Bristol Brabazon, the next station due to open. Highlighted line is the branch's real track geometry via OpenStreetMap (ways tagged ref=AFR, Network Rail's code for the Avonmouth and Filton Railway), clipped by way ID to the Filton–Henbury section the new passenger service will actually run over — the freight line continues several more km past Henbury to Avonmouth Docks, which stays freight-only and isn't drawn.",
@@ -348,7 +348,7 @@ export const projects: Project[] = [
     id: "metrowest-charfield",
     name: "MetroWest Phase 2: Charfield station",
     area: "Charfield (South Gloucestershire)",
-    category: "rail_metrobus",
+    category: "rail",
     status: "underway",
     description:
       "New station in the centre of Charfield, on the Bristol–Gloucester line, which lost its last station in 1965. Hourly trains each way will put roughly 14,500 residents within three miles of the rail network for the first time in 60 years — about 32 minutes to Bristol Temple Meads, 22 to Gloucester — part of MetroWest Phase 2's wider move to half-hourly Bristol–Gloucester services via Yate. Construction started August 2025; platforms and the footbridge were in place by May 2026, and opening is due spring 2027. £41.7m funded by WECA via the City Region Sustainable Transport Settlement, delivered by South Gloucestershire Council with Network Rail and contractor Octavius. Charfield sits well outside Bristol's boundary, but is included as part of the Bristol–Gloucester commuter corridor Phase 2 upgrades.",
@@ -376,7 +376,7 @@ export const projects: Project[] = [
     id: "m1-metrobus-extension",
     name: "m1 MetroBus extension",
     area: "Hengrove Park / Hawkfield Road / Imperial Retail Park",
-    category: "rail_metrobus",
+    category: "bus_routes",
     status: "underway",
     description:
       "Extends the m1 MetroBus beyond Hengrove Park Leisure Centre to Imperial Retail Park via the new William Jessop Way housing and along Hawkfield Road, with MetroBus shelters, real-time displays, raised platforms for step-free boarding and strengthened concrete pads at stops. The street works alongside add new and upgraded pedestrian crossings on Hawkfield Road, Briscoes Avenue, Fulford Road and Whitchurch Lane, zebras at side roads, and traffic calming; the two-way Hawkfield Road cycle path built as part of the same scheme has its own entry (hawkfield-cycle-path). It pushes the rapid transit network into a part of south Bristol that new housing is being added to, so the residents arrive with the connection already there. Construction started early January 2026 at the northern end of Hawkfield Road, working south in phases to Butterfly Lane, with completion expected autumn 2026; preparatory work on the concrete stop pads began 10 August 2026. Highlighted line is traced from OSM street centrelines (Hengrove Promenade, The Boulevard, William Jessop Way, Butterfly Lane, Hawkfield Road, then Hengrove Way and Wills Way to the Imperial Retail Park entrance) — no route relation exists yet, so the alignment through the Hengrove Park development and the terminus arrangement are indicative.",
@@ -424,7 +424,7 @@ export const projects: Project[] = [
     id: "we-mass-transit",
     name: "West of England mass transit",
     area: "West of England (regional) — city centre to Bristol Airport",
-    category: "rail_metrobus",
+    category: "rail",
     status: "proposed",
     description:
       "WECA's Transport Vision, published February 2026, commits the region to building mass transit — light rail, trams or tram-like vehicles on segregated roadways, with multiple doors, low floors and high capacity. Two initial concepts are named: Redcliffe Way in Bristol, and a link to Bristol Airport, which is the only regional airport in the country with no fixed transit connection and currently reachable only by road 16km from the centre. The West is the largest city-region in the UK without mass transit or a commitment to build it, so this is the gap-closing move rather than an incremental upgrade. Leaders have committed to start construction within four to five years of the announcement, with £752m secured for buses, trains and mass transit planning and 250+ new green buses arriving by the end of 2026. Note this vision post-dates JLTP4 — the 2020–2036 Joint Local Transport Plan adopted by WECA and the four councils, still the formally adopted plan — and a follow-on Transport Strategy is in development.",
@@ -451,7 +451,7 @@ export const projects: Project[] = [
     id: "speculative-airport-route",
     name: "Airport mass transit route (speculative)",
     area: "Bristol Temple Meads to Bristol Airport, via Bedminster and the A38",
-    category: "rail_metrobus",
+    category: "rail",
     status: "speculation",
     description:
       "WECA's Transport Vision (Feb 2026) names a link to Bristol Airport as one of two initial mass transit concepts, alongside Redcliffe Way — Bristol Airport is the only major regional airport in the UK with no fixed transit connection, reachable only by road 16km from the centre. Centre-to-airport was one of four corridors covered in WECA's first-stage business case, approved in 2024. The mode (light rail or tram-like vehicles on segregated roadways) is still undecided, no alignment has been published, and leaders have committed only to start construction within four to five years of the Feb 2026 announcement (see we-mass-transit for the fuller regional picture). The line drawn here is for illustration of a plausible corridor, not WECA's proposal — built by tracing real OpenStreetMap streets and rail (Temple Meads to the A38 via Bedminster Down Road, then Highridge and Barrow Gurney to a straight-line cut across the airport's access roundabout into the terminal). Treat the geometry as illustration, not fact.",
