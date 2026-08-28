@@ -44,17 +44,17 @@ export const projects: Project[] = [
     category: "liveable_neighbourhood",
     status: "proposed",
     description:
-      "Proposed area-wide scheme across 11 neighbourhoods in Southville, Bedminster, Ashton Vale, Malago Vale, Windmill Hill and part of Totterdown, with Southville, Bedminster East and Totterdown as phase 1. Residential streets keep vehicle access to every road but discourage or prevent through-traffic and lower speeds; 11 parking areas gain Residents' Parking, Matchday Parking (around Ashton Gate) or both. The case for it is measured, not assumed: ANPR surveys found 10–13% of traffic in Southville was shortcutting through — roughly 650–1,450 vehicles. Removing that makes residential streets safer to walk, wheel and cycle on and frees kerb space for residents rather than commuters and matchday parkers. Consultation ran 4 September to 30 October 2025; the report was published 5 May 2026 and a decision is still to come. No official GIS boundary is published — the highlighted area is traced along real road centrelines (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint John's Lane, Wells Road, via OpenStreetMap) to match BCC's published study-area map, with short straight bridges at complex junctions. Not survey-accurate.",
+      "Proposed area-wide scheme across 11 neighbourhoods in Southville, Bedminster, Ashton Vale, Malago Vale, Windmill Hill and part of Totterdown, with Southville, Bedminster East and Totterdown as phase 1. Residential streets keep vehicle access to every road but discourage or prevent through-traffic and lower speeds; 11 parking areas gain Residents' Parking, Matchday Parking (around Ashton Gate) or both. The case for it is measured, not assumed: ANPR surveys found 10–13% of traffic in Southville was shortcutting through — roughly 650–1,450 vehicles. Removing that makes residential streets safer to walk, wheel and cycle on and frees kerb space for residents rather than commuters and matchday parkers. Consultation ran 4 September to 30 October 2025; the report was published 5 May 2026 and a decision is still to come. No official GIS boundary is published — the highlighted area is digitised from BCC's own study-area map, georeferenced against the ward boundaries printed on it. Where the boundary follows a ward line (the south-west edge around Ashton Vale, the southern edge along the Bedminster/Bishopsworth boundary, the eastern edge past Perrett's Park) it uses Open Data Bristol's Wards layer; where it follows a road or railway (Coronation Road, York Road, Bath Road, Clift House Road, Bedminster Down Road, the Portishead branch line) it uses OpenStreetMap centrelines. It holds to within about 13m of the line BCC drew, which is itself about 26m wide on the ground. Not survey-accurate.",
     sourceName: "South Bristol Liveable Neighbourhoods (BCC)",
     sourceUrl:
       "https://www.bristol.gov.uk/ask/projects/south-bristol-liveable-neighbourhood",
     extraLinks: [
       {
-        name: "Detailed proposals",
-        url: "https://www.bristol.gov.uk/ask/projects/south-bristol-liveable-neighbourhood/sbln-proposals",
+        name: "Original proposals (autumn 2025)",
+        url: "https://www.bristol.gov.uk/ask/projects/south-bristol-liveable-neighbourhood/sbln-proposals-2025",
       },
     ],
-    lastUpdated: "2026-07-30",
+    lastUpdated: "2026-08-28",
     highlights: [
       "Area-wide scheme across 11 neighbourhoods in Southville, Bedminster, Ashton Vale, Malago Vale and Windmill Hill",
       "Every road keeps vehicle access; through-traffic is discouraged or prevented and speeds lowered",
@@ -472,21 +472,23 @@ export const projects: Project[] = [
   {
     id: "bristol-school-streets",
     name: "Bristol School Streets",
-    area: "Citywide (16 primary schools, more in consultation)",
+    area: "Citywide (17 primary schools, 4 more in consultation)",
     category: "liveable_neighbourhood",
     status: "underway",
     description:
-      "Timed closures of the streets immediately outside school entrances at opening and closing times, with only walking, wheeling, cycling and scooting allowed through and exemptions for emergency vehicles and Blue Badge holders. Sixteen Bristol primary schools have live schemes. It targets the specific problem that the school gate is most dangerous exactly when children are arriving, and that the danger is largely caused by the school run itself — removing the vehicles for those two short windows is what makes walking or cycling to school a reasonable choice. Our Lady of the Rosary (Lawrence Weston), Glenfrome (Eastville), Oasis Academy Marksbury Road (Bedminster) and May Park (Eastville) consulted on joining, closing 23 March 2026. Citywide, so it stays a point marker; each school has its own Travelwest page.",
+      "Timed closures of the streets immediately outside school entrances at opening and closing times, with only walking, wheeling, cycling and scooting allowed through and exemptions for emergency vehicles and Blue Badge holders; residents of the closed streets can apply for an access permit. It targets the specific problem that the school gate is most dangerous exactly when children are arriving, and that the danger is largely caused by the school run itself — removing the vehicles for those two short windows is what makes walking or cycling to school a reasonable choice. Seventeen schools have live schemes: School Close (Wansdyke), Ellfield Close (St Peter's CofE), Victoria Avenue (Redfield Educate Together), Atlas Road and Raymend Road (Victoria Park), Abingdon Road between Moorlands and Acton Roads (Chester Park Junior), The Greenway and Cherry Tree Crescent (Minerva), Johnsons Lane, Johnsons Road and Woodcroft Avenue (Whitehall), College Square (Cathedral Primary and Bristol Cathedral Choir School), Gladstone Road (St Bernadette's), Olveston Road (Ashley Down), Vowell Close (Fair Furlong), Upton Road (Ashton Gate), Mogg Street and John Street (St Werburgh's), Corbet Close (Oasis Bank Leaze), Headley Park Avenue (Headley Park), Springfield Avenue (Shirehampton) and Clavell Road (Blaise, the newest, launched 5 May 2026). Four more consulted on joining, closing 23 March 2026: Cottisford Road, Parkside Gardens, South Hayes and part of Sir John's Lane up to Heyford Avenue (Glenfrome), Tide Grove (Our Lady of the Rosary), Oakhill Drive from Marksbury Road to the school gates and on to Timsbury Road (Oasis Marksbury Road), and Coombe Road, Freeland Buildings and part of East Park (May Park). Street names and extents are each school's own Travelwest page, linked from the index page above; highlighted lines are each named street's OSM way, bounded to the closure section where the source names one — a scattered set of short segments across the city rather than one corridor, since each School Street is independent.",
     sourceName: "Bristol School Streets (Travelwest)",
     sourceUrl: "https://travelwest.info/projects/bristol-school-streets/",
-    lastUpdated: "2026-07-30",
+    lastUpdated: "2026-08-28",
     highlights: [
       "Timed closures of streets outside school entrances at opening and closing times",
       "Only walking, wheeling, cycling and scooting allowed through, plus emergency/Blue Badge exemptions",
-      "16 primary schools have live schemes; four more consulted on joining, closing 23 March 2026",
+      "17 primary schools have live schemes; four more consulted on joining, closing 23 March 2026",
       "Removes the school-run traffic that makes the gate most dangerous exactly when children arrive",
     ],
     coordinates: [-2.5750, 51.4700],
+    geometryUrl: "/data/bristol_school_streets.geojson",
+    geometryType: "line",
   },
   {
     id: "railway-path-barriers",
