@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { Project, ProjectCategory } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
 import { ThemeToggle } from "./ThemeToggle";
@@ -99,6 +99,7 @@ export function Sidebar({
               else cardRefs.current.delete(project.id);
             }}
             className={"project-card" + (project.id === selectedId ? " project-card--selected" : "")}
+            style={{ "--card-accent": CATEGORY_COLORS[project.category] } as CSSProperties}
             onClick={() => onSelect(project.id)}
           >
             <div className="project-card-header">

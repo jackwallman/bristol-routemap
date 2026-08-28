@@ -146,6 +146,7 @@
   text-align: left;
   background: none;
   border: 1px solid var(--border);
+  border-left: 4px solid var(--card-accent, var(--border));
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 10px;
@@ -155,12 +156,12 @@
 }
 
 .project-card:hover {
-  border-color: var(--accent-border);
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 50%, transparent);
 }
 
 .project-card--selected {
-  border-color: var(--accent);
-  background: var(--accent-bg);
+  border-color: var(--card-accent, var(--accent));
+  background: color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent);
 }
 
 .project-card-header {
