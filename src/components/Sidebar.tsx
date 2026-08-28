@@ -57,7 +57,7 @@ export function Sidebar({
           </label>
         ))}
         <p className="filter-hint">
-          Liveable Neighbourhoods and corridor projects are highlighted as areas/routes on the
+          Neighbourhood street schemes and corridor projects are highlighted as areas/routes on the
           map where we have geometry for them — see each project card for source and accuracy.
         </p>
       </section>

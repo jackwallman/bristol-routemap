@@ -38,7 +38,7 @@ export interface Project {
 }
 
 export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
-  liveable_neighbourhood: "Liveable Neighbourhoods",
+  liveable_neighbourhood: "Neighbourhood street schemes",
   cycle_infra: "Cycle infrastructure",
   bus_routes: "Bus routes",
   rail: "Rail",
