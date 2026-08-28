@@ -531,4 +531,26 @@ export const projects: Project[] = [
     geometryUrl: "/data/feeder_promenade.geojson",
     geometryType: "line",
   },
+  {
+    id: "filwood-broadway-cycle-route",
+    name: "Filwood Broadway cycle route (reCREATE Filwood)",
+    area: "Filwood Broadway / Knowle West",
+    category: "cycle_infra",
+    status: "approved",
+    description:
+      "A segregated cycle route along the west side of Filwood Broadway, part of the wider reCREATE Filwood public realm scheme: Barnstaple Road between Kinvara Road and Marwood Road is pedestrianised and folded into the Community Centre's green space and a new paved market square, the west side of the Broadway becomes a wide tree-lined pedestrian route with the segregated cycle track alongside it, and the northern stretch beyond Hartcliffe Road gets two-hour parking limits, new disabled/loading bays and road humps. Filwood Broadway currently offers cyclists nothing but the carriageway of a shopping street doubling as a through-route; separating the cycle track from both traffic and the widened footway is what turns it into a route people who aren't confident riders would use. Funded via £14.5m from the UK Government's Levelling Up Fund plus £1.72m from Bristol City Council (part of £30m+ earmarked for the wider Broadway). A Traffic Regulation Order consultation on the detailed scheme design ran March 2026 and the TRO has since been approved; a contractor procurement process is due to launch summer 2026, with construction from autumn 2026 and completion expected in 2027. Distinct from the Filwood Quietway built under the 2015–2018 Cycle Ambition Fund (long since complete) and from its separately-proposed, still-unfunded ATF4 extension further north (St John's Lane/Wedmore Vale) — this is the Levelling Up Fund-backed Broadway scheme. Highlighted line is the northernmost of three 'Filwood Quietway'-labelled Planned segments in Open Data Bristol's cycle network dataset, the one whose location matches Filwood Broadway itself (roughly Hartcliffe Road to Airport Road); the dataset's other two segments run much further south into Hartcliffe/Symes Avenue with no matching published scheme, so aren't drawn.",
+    sourceName: "Filwood regeneration (Bristol City Council)",
+    sourceUrl: "https://www.bristol.gov.uk/ask/projects/filwood-regeneration",
+    lastUpdated: "2026-08-28",
+    endDate: "Construction from autumn 2026; completion expected 2027",
+    highlights: [
+      "Segregated cycle track on the west side of Filwood Broadway, alongside a widened tree-lined pedestrian route",
+      "Barnstaple Road pedestrianised between Kinvara Road and Marwood Road, opening onto a new market square",
+      "Funded by £14.5m Levelling Up Fund + £1.72m Bristol City Council; TRO approved, construction from autumn 2026",
+      "A newer, funded scheme distinct from the Broadway's now-complete 2015–2018 Cycle Ambition Fund quietway",
+    ],
+    coordinates: [-2.584184, 51.421077],
+    geometryUrl: "/data/filwood_broadway_cycle_route.geojson",
+    geometryType: "line",
+  },
 ];

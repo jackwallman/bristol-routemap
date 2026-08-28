@@ -36,6 +36,21 @@ Three layers:
   dataset shows a modified date of 2025-09-05 — current, not the 2017 snapshot the original
   research turned up.
 
+  `cycle_network.geojson` has had 27 "Proposed"/"Planned" features removed (2026-08-28) where
+  `PROG_STATU` (the programme-stage field) contradicts `R_STATUS`: "Scheme complete / No
+  improvements identified" on a segment marked as still Proposed or Planned. All were unnamed and
+  clustered at short lengths (0.01–4km) — stale records rather than live proposals. Existing and
+  Aspirational segments weren't touched. If re-fetching via `fetch-opendata.mjs`, re-apply this
+  filter (or check whether BCC's own data has since cleaned it up).
+
+  `feeder_promenade.geojson` and `filwood_broadway_cycle_route.geojson` aren't from Overpass —
+  they're individual segments matched by `ROUTE_NAME` directly out of `cycle_network.geojson`
+  (Proposed "Feeder Road (Promenade)" and Planned "Filwood Quietway" respectively), used because
+  no OSM route exists for either yet. `filwood_broadway_cycle_route.geojson` deliberately keeps
+  only one of the three "Filwood Quietway"-labelled Planned segments in the dataset — the one whose
+  location (Hartcliffe Road–Airport Road) matches the funded reCREATE Filwood scheme; the other two
+  run south into Hartcliffe/Symes Avenue with no matching published scheme (see "Not yet built").
+
 - **`public/data/{a4_portway,bus_route_2,metrobus_network,portishead_line,henbury_line,m1_extension,hawkfield_cycle_path,temple_way,bond_street,bond_street_cycle_route,bedminster_bridges,redcliffe_way,redcliffe_way_cycle_track,broadmead,railway_path_barriers}.geojson`**
   (OpenStreetMap, via Overpass) — real road/route geometry for corridor projects that have no
   dataset on Open Data Bristol. Bus Route 2 and MetroBus m1–m4 are unambiguous OSM route relations
@@ -174,15 +189,46 @@ that GeoJSON, colored by category, with click-to-select and `fitBounds` on selec
   funding announcement is the best surviving summary. Swap it for a proper scheme page if one
   appears.
 
-  The **Active Travel Fund 4** quietways — Deanery Road, Filwood, Malago Greenway and Old Market
-  (St Matthias Park to Lawrence Hill roundabout) — are **not** entries because they fail Rule 2:
-  consultation ran in early 2024, they're still awaiting a funding bid for detailed design, and
-  `ask.bristol.gov.uk/active-travel-fund-4-schemes` now 404s. Add them when a live page exists.
+  The **Active Travel Fund 4** quietways — Deanery Road, Filwood (St John's Lane/Wedmore Vale
+  extension), Malago Greenway and Old Market (Old Market Roundabout via Redcross Street, Braggs
+  Lane and Trinity Street to Lawrence Hill roundabout) — are **not** entries because they fail Rule
+  2: consultation ran in early 2024, they're still awaiting a funding bid for detailed design, and
+  `ask.bristol.gov.uk/active-travel-fund-4-schemes` still 404s (re-checked 2026-08-28; also true of
+  the community-run `oldmarketca.co.uk`, whose domain no longer resolves). Add them when a live page
+  exists. Note this ATF4 Filwood extension is a **different, still-unfunded** scheme from
+  `filwood-broadway-cycle-route` below — that one's funded by the Levelling Up Fund, this one isn't.
 
 - **`public/data/metrobus_network.geojson` is now unreferenced** after the MetroBus entry was
   removed (see "Deliberately excluded"). `scripts/fetch-osm-routes.mjs` still fetches it. Left in
   place rather than deleted, in case the network is wanted back as a context map layer rather than
   a project entry.
+
+- **Small "Proposed"/"Planned" segments in the cycle network with no matching published scheme**
+  (checked 2026-08-28, all `NEW_CLASSI` "Not BCC" or "CP" except Inns Court): Inns Court, Saltwall
+  Avenue, Lime Trees Road Link, "Filton Keynes" (an odd combined name — plausibly a data entry
+  issue; sits near Kings Weston/Henbury, not Filton) and Keynsham. None have a page describing what
+  would actually change — fails Rule 3. Also excluded on the same basis: a 3.1km "Planned" segment
+  labelled "Promenade" (programme code CP-BR2) running along the River Avon between St Anne's and
+  Conham — geographically and by name distinct from `feeder-promenade`'s Feeder Canal alignment in
+  St Philip's Marsh (programme code CP-A2), despite the similar name.
+
+- **Schemes researched this pass that turned out to already be finished, cancelled, or otherwise
+  covered** (checked 2026-08-28), kept here so they aren't re-investigated from scratch next time:
+  - **Old City & King Street pedestrianisation** (King Street + Queen Charlotte Street, segregated
+    cycle path to Baldwin Street/Queen Square) — all five phases were scheduled to finish by
+    October 2025; its page (`.../king-street-pedestrianisation`) is still live but describes a
+    completed programme with nothing further in prospect.
+  - **Cotham Hill permanent scheme** — the Transport and Connectivity Committee decided 5 February
+    2026 *not* to proceed; its consultation page now 404s.
+  - **Park Row / Perry Road / Upper Maudlin Street / Colston Street** — completed early 2025 (£3.1m
+    Active Travel Fund); its project page has since been taken down.
+  - **Princess Victoria Street permanent pedestrianisation** — the £655k permanent scheme (paving,
+    landscaping, gates) was substantially complete by mid-2025.
+  - **A4018 Passage Road ↔ Charlton Road** — a segregated cycle lane and peak-hour bus lanes here
+    are already covered by `bus-route-2`'s geometry (both streets are named ways within
+    `bus_route_2.geojson`); no separate entry needed. The Charlton Road walking/cycling element
+    specifically (tied to the YTL Arena Bristol development) awaited a decision as of the survey
+    report (autumn 2024–winter 2025) — worth a dedicated entry if it produces its own funded scheme.
 
 ## Deliberately excluded
 
