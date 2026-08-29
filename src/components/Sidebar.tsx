@@ -91,7 +91,10 @@ export function Sidebar({
       </div>
       <div className="sidebar-scroll">
         <div className="sidebar-header">
-          <h1>Get About Bristol</h1>
+          <div className="sidebar-title">
+            <img src="/logo.svg" alt="" className="sidebar-logo" width={28} height={28} />
+            <h1>Get About Bristol</h1>
+          </div>
           <ThemeToggle />
         </div>
         <p className="sidebar-subtitle">Transport infrastructure projects, in one place</p>
