@@ -1,4 +1,4 @@
-# Get About Bristol
+# Bristol Routemap
 
 Map + list of Bristol transport infrastructure projects. Vite + React + TS, MapLibre GL.
 See `README.md` for the stack, the data model, and the re-fetch scripts.

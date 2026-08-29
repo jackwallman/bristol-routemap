@@ -93,11 +93,11 @@ export function Sidebar({
         <div className="sidebar-header">
           <div className="sidebar-title">
             <img src="/logo.svg" alt="" className="sidebar-logo" width={28} height={28} />
-            <h1>Get About Bristol</h1>
+            <h1>Bristol Routemap</h1>
           </div>
           <ThemeToggle />
         </div>
-        <p className="sidebar-subtitle">Transport infrastructure projects, in one place</p>
+        <p className="sidebar-subtitle">Transport infrastructure projects</p>
 
         <section className="filter-section">
           <h2>Categories</h2>
@@ -116,10 +116,6 @@ export function Sidebar({
               {CATEGORY_LABELS[category]}
             </label>
           ))}
-          <p className="filter-hint">
-            Neighbourhood street schemes and corridor projects are highlighted as areas/routes on the
-            map where we have geometry for them — see each project card for source and accuracy.
-          </p>
         </section>
 
         <section className="filter-section">
