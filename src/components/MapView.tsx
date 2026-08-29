@@ -6,6 +6,10 @@ import { CATEGORY_COLORS, CATEGORY_LABELS } from "../types/project";
 
 const BRISTOL_CENTER: [number, number] = [-2.5879, 51.4545];
 
+// Amber halo used to mark the selected corridor/boundary — distinct from
+// every category color so it reads as "selected" rather than "another category".
+const SELECTION_HIGHLIGHT = "#ffc02e";
+
 // Free, no-API-key vector basemap (OSM data, hosted by OpenFreeMap). We fetch
 // "positron" — a light, muted style — and boost its parks/water back to
 // color so highlighted routes and place names stand out against a quiet grey
@@ -219,6 +223,15 @@ export function MapView({
             paint: { "fill-color": color, "fill-opacity": 0.28 },
             layout: { visibility },
           });
+          // Amber halo, invisible until selected — a universal "this one" cue
+          // that reads on top of any category color or basemap tone.
+          map.addLayer({
+            id: `${sourceId}-glow`,
+            type: "line",
+            source: sourceId,
+            paint: { "line-color": SELECTION_HIGHLIGHT, "line-width": 9, "line-blur": 4, "line-opacity": 0 },
+            layout: { visibility },
+          });
           map.addLayer({
             id: `${sourceId}-outline`,
             type: "line",
@@ -226,7 +239,7 @@ export function MapView({
             paint: { "line-color": color, "line-width": 3 },
             layout: { visibility },
           });
-          corridorLayerIdsRef.current[project.id] = [`${sourceId}-fill`, `${sourceId}-outline`];
+          corridorLayerIdsRef.current[project.id] = [`${sourceId}-fill`, `${sourceId}-glow`, `${sourceId}-outline`];
           fillLayerIdsRef.current.push(`${sourceId}-fill`);
           layerToProjectIdRef.current[`${sourceId}-fill`] = project.id;
         }
@@ -238,6 +251,13 @@ export function MapView({
           const color = CATEGORY_COLORS[project.category];
           const visibility = visibleIds.has(project.id) ? "visible" : "none";
 
+          map.addLayer({
+            id: `${sourceId}-glow`,
+            type: "line",
+            source: sourceId,
+            paint: { "line-color": SELECTION_HIGHLIGHT, "line-width": 20, "line-blur": 6, "line-opacity": 0 },
+            layout: { visibility, "line-cap": "round", "line-join": "round" },
+          });
           map.addLayer({
             id: `${sourceId}-casing`,
             type: "line",
@@ -252,7 +272,7 @@ export function MapView({
             paint: { "line-color": color, "line-width": 6.5, "line-opacity": 1 },
             layout: { visibility, "line-cap": "round", "line-join": "round" },
           });
-          corridorLayerIdsRef.current[project.id] = [`${sourceId}-casing`, `${sourceId}-line`];
+          corridorLayerIdsRef.current[project.id] = [`${sourceId}-glow`, `${sourceId}-casing`, `${sourceId}-line`];
           lineLayerIdsRef.current.push(`${sourceId}-line`);
           layerToProjectIdRef.current[`${sourceId}-line`] = project.id;
         }
@@ -358,7 +378,11 @@ export function MapView({
       const selected = projectId === selectedId;
       layerIds.forEach((layerId) => {
         if (!map.getLayer(layerId)) return;
-        if (layerId.endsWith("-line")) {
+        if (layerId.endsWith("-glow")) {
+          map.setPaintProperty(layerId, "line-opacity", selected ? 0.85 : 0);
+        } else if (layerId.endsWith("-casing")) {
+          map.setPaintProperty(layerId, "line-width", selected ? 14 : 10);
+        } else if (layerId.endsWith("-line")) {
           map.setPaintProperty(layerId, "line-width", selected ? 8.5 : 6.5);
           map.setPaintProperty(layerId, "line-opacity", 1);
         } else if (layerId.endsWith("-fill")) {

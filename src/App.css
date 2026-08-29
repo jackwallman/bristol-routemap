@@ -331,6 +331,7 @@
   width: 22px;
   height: 22px;
   border-width: 3px;
+  box-shadow: 0 0 0 4px #ffc02e, var(--shadow);
 }
 
 @media (max-width: 720px) {
