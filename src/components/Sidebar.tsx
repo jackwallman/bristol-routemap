@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import type { Project, ProjectCategory } from "../types/project";
+import type { Project, ProjectCategory, ProjectStatus } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
 import { CategoryIcon } from "./CategoryIcon";
 import { ThemeToggle } from "./ThemeToggle";
@@ -17,6 +17,9 @@ interface SidebarProps {
   allCategories: ProjectCategory[];
   activeCategories: Set<ProjectCategory>;
   onToggleCategory: (category: ProjectCategory) => void;
+  allStatuses: ProjectStatus[];
+  activeStatuses: Set<ProjectStatus>;
+  onToggleStatus: (status: ProjectStatus) => void;
   showCycleNetwork: boolean;
   onToggleCycleNetwork: () => void;
   showBusStops: boolean;
@@ -30,6 +33,9 @@ export function Sidebar({
   allCategories,
   activeCategories,
   onToggleCategory,
+  allStatuses,
+  activeStatuses,
+  onToggleStatus,
   showCycleNetwork,
   onToggleCycleNetwork,
   showBusStops,
@@ -141,6 +147,27 @@ export function Sidebar({
             <input type="checkbox" checked={showBusStops} onChange={onToggleBusStops} />
             Bus stops (Open Data Bristol)
           </label>
+        </section>
+
+        <section className="filter-section">
+          <h2>Status</h2>
+          <div className="status-pills">
+            {allStatuses.map((status) => {
+              const active = activeStatuses.has(status);
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={"status-pill" + (active ? "" : " status-pill--inactive")}
+                  style={active ? { backgroundColor: STATUS_COLORS[status] } : undefined}
+                  onClick={() => onToggleStatus(status)}
+                  aria-pressed={active}
+                >
+                  {STATUS_LABELS[status]}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="project-list">

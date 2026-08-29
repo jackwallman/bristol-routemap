@@ -51,6 +51,16 @@ export const CATEGORY_COLORS: Record<ProjectCategory, string> = {
   rail: "#6a1b9a",
 };
 
+export const ALL_STATUSES: ProjectStatus[] = [
+  "proposed",
+  "consultation",
+  "approved",
+  "underway",
+  "completed",
+  "unknown",
+  "speculation",
+];
+
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   proposed: "Proposed",
   consultation: "In consultation",

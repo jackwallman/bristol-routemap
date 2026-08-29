@@ -151,6 +151,34 @@
   opacity: 0.7;
 }
 
+.status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-pill {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: #fff;
+}
+
+.status-pill--inactive {
+  background: none;
+  color: var(--text);
+  border-color: var(--border);
+  opacity: 0.55;
+}
+
+.status-pill--inactive:hover {
+  opacity: 0.85;
+}
+
 .project-card {
   display: block;
   width: 100%;
