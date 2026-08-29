@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import type { Project, ProjectCategory } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
+import { CategoryIcon } from "./CategoryIcon";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface SidebarProps {
@@ -52,7 +53,11 @@ export function Sidebar({
               checked={activeCategories.has(category)}
               onChange={() => onToggleCategory(category)}
             />
-            <span className="swatch" style={{ backgroundColor: CATEGORY_COLORS[category] }} />
+            <CategoryIcon
+              category={category}
+              className="filter-icon"
+              style={{ color: CATEGORY_COLORS[category] } as CSSProperties}
+            />
             {CATEGORY_LABELS[category]}
           </label>
         ))}
@@ -103,7 +108,10 @@ export function Sidebar({
             onClick={() => onSelect(project.id)}
           >
             <div className="project-card-header">
-              <span className="project-name">{project.name}</span>
+              <span className="project-name">
+                <CategoryIcon category={project.category} className="project-name-icon" />
+                {project.name}
+              </span>
               <span
                 className="status-badge"
                 style={{ backgroundColor: STATUS_COLORS[project.status] }}
