@@ -50,6 +50,7 @@ interface MapViewProps {
   onSelect: (id: string) => void;
   showCycleNetwork: boolean;
   showBusStops: boolean;
+  showRailNetwork: boolean;
 }
 
 function extendBounds(bounds: Bounds | null, coord: LngLat): Bounds {
@@ -80,6 +81,7 @@ export function MapView({
   onSelect,
   showCycleNetwork,
   showBusStops,
+  showRailNetwork,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -158,6 +160,22 @@ export function MapView({
             0.6,
           ],
           "line-dasharray": ["match", ["get", "R_STATUS"], "Existing", ["literal", [1, 0]], ["literal", [2, 1.5]]],
+        },
+        layout: { visibility: "none" },
+      });
+
+      map.addSource("rail-network", {
+        type: "geojson",
+        data: "/data/rail_network.geojson",
+      });
+      map.addLayer({
+        id: "rail-network-line",
+        type: "line",
+        source: "rail-network",
+        paint: {
+          "line-color": "#5c5c5c",
+          "line-width": 1.5,
+          "line-opacity": 0.7,
         },
         layout: { visibility: "none" },
       });
@@ -326,10 +344,13 @@ export function MapView({
       if (map.getLayer("bus-stops-point")) {
         map.setLayoutProperty("bus-stops-point", "visibility", showBusStops ? "visible" : "none");
       }
+      if (map.getLayer("rail-network-line")) {
+        map.setLayoutProperty("rail-network-line", "visibility", showRailNetwork ? "visible" : "none");
+      }
     };
     if (map.isStyleLoaded()) setVis();
     else map.once("load", setVis);
-  }, [showCycleNetwork, showBusStops]);
+  }, [showCycleNetwork, showBusStops, showRailNetwork]);
 
   // Toggle corridor/boundary layer visibility to match the active category filters.
   useEffect(() => {

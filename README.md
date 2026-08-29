@@ -111,13 +111,24 @@ Three layers:
 
   or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`,
   `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`,
-  `school-streets`) to refresh one output without re-fetching the rest — `bond-street` also
+  `school-streets`, `rail-network`) to refresh one output without re-fetching the rest — `bond-street` also
   refreshes `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
   `redcliffe_way_cycle_track.geojson`, since each pair is fetched together. Overpass is a shared
   public resource — this script deliberately fetches one relation at a time with a delay between
   requests. Don't parallelize it or run it in a tight loop. `school-streets` is resumable: schools
   already present in the output file are skipped on re-run, so a run that dies partway (Overpass's
   public instances are occasionally all down at once) can just be re-run rather than starting over.
+
+- **`public/data/rail_network.geojson`** — the existing rail network context layer (toggled off by
+  default), every currently-in-use `railway=rail` way across the wider Bristol area (Bath, Weston-
+  super-Mare/Nailsea, Filton Bank/Gloucester and Severn Beach lines, not just the city centre),
+  fetched via Overpass and rendered as a plain grey line. Deliberately excludes
+  `railway=disused|abandoned|construction` (not "existing") and `service=yard|siding|spur`
+  (depot/sidings clutter rather than a route) — so it naturally leaves out the Portishead Branch
+  Line (still under construction, `portishead-line`) while still including the Henbury/Avonmouth
+  freight line (`ref=AFR`, currently in active freight use even though its passenger service is a
+  separate project entry, `henbury-line`). Re-fetch with the `rail-network` section of
+  `fetch-osm-routes.mjs` below.
 
 - **`public/data/south_bristol_ln_boundary.geojson`** — traced along real road centrelines
   (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint

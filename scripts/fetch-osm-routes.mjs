@@ -4,7 +4,7 @@
 // Pass a section name to refresh just one output without re-fetching the rest:
 // node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1,
 // henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path,
-// school-streets)
+// school-streets, rail-network)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -355,6 +355,23 @@ function schoolStreetsQuery({ streets, bbox }) {
   return `[out:json][timeout:30];\n(\n${clauses}\n);\nout geom;\n`;
 }
 
+// Existing rail network context layer: every currently-in-use railway=rail way
+// (passenger or freight) across the wider Bristol area, for a background "where
+// the tracks are" layer alongside the project corridor lines. Excludes
+// railway=disused/abandoned/construction (those aren't "existing") and
+// service=yard/siding/spur (sidings and depot throat trackage clutter the map
+// without representing a route). Bbox is wider than the project-corridor
+// queries above to catch the Bath, Weston-super-Mare/Nailsea, Gloucester/Filton
+// Bank and Severn Beach lines fanning out from Temple Meads/Parkway, not just
+// the city centre.
+const railNetworkQuery = `
+[out:json][timeout:90];
+(
+  way["railway"="rail"]["service"!~"yard|siding|spur"](51.32,-2.80,51.56,-2.40);
+);
+out geom;
+`;
+
 async function main() {
   const only = process.argv[2];
   const want = (section) => !only || only === section;
@@ -599,6 +616,16 @@ out geom;
       await sleep(6000);
     }
     console.log(`  ${schoolStreetFeatures.length} total features written`);
+  }
+
+  if (want("rail-network")) {
+    console.log("Fetching existing rail network...");
+    const railNetwork = await overpassQuery(railNetworkQuery);
+    writeFileSync(
+      "public/data/rail_network.geojson",
+      JSON.stringify(waysToGeoJSON(railNetwork.elements)),
+    );
+    console.log(`  ${railNetwork.elements.length} elements written`);
   }
 
   console.log("Done.");

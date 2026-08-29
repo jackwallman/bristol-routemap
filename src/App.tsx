@@ -21,6 +21,7 @@ function App() {
   );
   const [showCycleNetwork, setShowCycleNetwork] = useState(true);
   const [showBusStops, setShowBusStops] = useState(false);
+  const [showRailNetwork, setShowRailNetwork] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filteredProjects = useMemo(
@@ -66,6 +67,8 @@ function App() {
         onToggleCycleNetwork={() => setShowCycleNetwork((v) => !v)}
         showBusStops={showBusStops}
         onToggleBusStops={() => setShowBusStops((v) => !v)}
+        showRailNetwork={showRailNetwork}
+        onToggleRailNetwork={() => setShowRailNetwork((v) => !v)}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />
@@ -76,6 +79,7 @@ function App() {
         onSelect={setSelectedId}
         showCycleNetwork={showCycleNetwork}
         showBusStops={showBusStops}
+        showRailNetwork={showRailNetwork}
       />
     </div>
   );

@@ -24,6 +24,8 @@ interface SidebarProps {
   onToggleCycleNetwork: () => void;
   showBusStops: boolean;
   onToggleBusStops: () => void;
+  showRailNetwork: boolean;
+  onToggleRailNetwork: () => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
@@ -40,6 +42,8 @@ export function Sidebar({
   onToggleCycleNetwork,
   showBusStops,
   onToggleBusStops,
+  showRailNetwork,
+  onToggleRailNetwork,
   selectedId,
   onSelect,
 }: SidebarProps) {
@@ -146,6 +150,10 @@ export function Sidebar({
           <label className="filter-row">
             <input type="checkbox" checked={showBusStops} onChange={onToggleBusStops} />
             Bus stops (Open Data Bristol)
+          </label>
+          <label className="filter-row">
+            <input type="checkbox" checked={showRailNetwork} onChange={onToggleRailNetwork} />
+            Rail network (OpenStreetMap)
           </label>
         </section>
 
