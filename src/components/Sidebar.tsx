@@ -3,6 +3,7 @@ import type { Project, ProjectCategory, ProjectStatus } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
 import { CategoryIcon } from "./CategoryIcon";
 import { ThemeToggle } from "./ThemeToggle";
+import { asset } from "../lib/asset";
 
 // Mobile-only bottom sheet: the puller drags .sidebar's height (vh) between
 // these three snap points, matching the Google Maps app's peek/half/full feel.
@@ -102,7 +103,7 @@ export function Sidebar({
       <div className="sidebar-scroll">
         <div className="sidebar-header">
           <div className="sidebar-title">
-            <img src="/logo.svg" alt="" className="sidebar-logo" width={28} height={28} />
+            <img src={asset("/logo.svg")} alt="" className="sidebar-logo" width={28} height={28} />
             <h1>Bristol Routemap</h1>
           </div>
           <ThemeToggle />

@@ -6,8 +6,9 @@ bristolonthemove.com, the BCC Ask Bristol project pages and Travelwest.
 
 ## Stack
 
-Vite + React + TypeScript, MapLibre GL JS for the map. Basemap is OpenFreeMap's "liberty" vector
-style (free, no API key). Liveable Neighbourhood areas and corridor projects are highlighted as
+Vite + React + TypeScript, MapLibre GL JS for the map. Basemap is OpenFreeMap's "positron" vector
+style (free, no API key), recoloured to bring parks/water back into muted colour. Liveable
+Neighbourhood areas and corridor projects are highlighted as
 real polygons/lines on the map, not just point markers, wherever we have geometry for them.
 
 **Vite quirk:** `vite.config.ts` excludes `maplibre-gl` from `optimizeDeps`. Without that, Vite's
@@ -289,4 +290,20 @@ than being removed on a guess — check the source before cutting.
 ```bash
 npm install
 npm run dev
+```
+
+## Deploying
+
+Pushing to `main` builds and publishes via `.github/workflows/deploy.yml` to GitHub Pages, served at
+https://jackwallman.com/bristol-routemap/ (a project Pages site on the `jackwallman.github.io`
+account, which carries the `jackwallman.com` custom domain). `vite.config.ts`'s `base` is set to
+`/bristol-routemap/` to match — if this repo is ever renamed, `base` has to be updated to match, or
+every asset 404s. Runtime fetches of `/data/*.geojson` and the logo go through `src/lib/asset.ts`
+rather than a bare `/...` path, for the same reason.
+
+To smoke-test the production build locally before pushing:
+
+```bash
+npm run build
+npm run preview
 ```

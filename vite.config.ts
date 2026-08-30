@@ -46,6 +46,9 @@ function maplibreWorker(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Must match the GitHub repo name: this deploys to a project Pages site at
+  // https://jackwallman.com/bristol-routemap/, not the domain root.
+  base: '/bristol-routemap/',
   plugins: [react(), maplibreWorker()],
   build: { assetsDir },
   // maplibre-gl loads its tile-parsing worker via a dynamic URL that Vite's

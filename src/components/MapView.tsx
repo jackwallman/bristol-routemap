@@ -3,6 +3,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Project } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "../types/project";
+import { asset } from "../lib/asset";
 
 const BRISTOL_CENTER: [number, number] = [-2.5879, 51.4545];
 
@@ -130,7 +131,8 @@ export function MapView({
     map.on("load", () => {
       map.addSource("cycle-network", {
         type: "geojson",
-        data: "/data/cycle_network.geojson",
+        data: asset("/data/cycle_network.geojson"),
+        attribution: "Cycle network © Open Data Bristol",
       });
       // Existing routes: solid. Planned/proposed: dashed. Aspirational: faint dashed.
       map.addLayer({
@@ -166,7 +168,8 @@ export function MapView({
 
       map.addSource("rail-network", {
         type: "geojson",
-        data: "/data/rail_network.geojson",
+        data: asset("/data/rail_network.geojson"),
+        attribution: "Rail network © OpenStreetMap contributors",
       });
       map.addLayer({
         id: "rail-network-line",
@@ -182,7 +185,8 @@ export function MapView({
 
       map.addSource("bus-stops", {
         type: "geojson",
-        data: "/data/bus_stops.geojson",
+        data: asset("/data/bus_stops.geojson"),
+        attribution: "Bus stops © Open Data Bristol",
       });
       map.addLayer({
         id: "bus-stops-point",
@@ -202,7 +206,7 @@ export function MapView({
       const geometryProjects = allProjects.filter((p) => p.geometryUrl);
       Promise.all(
         geometryProjects.map((project) =>
-          fetch(project.geometryUrl!)
+          fetch(asset(project.geometryUrl!))
             .then((res) => res.json())
             .then((geojson: SimpleFeatureCollection) => ({ project, geojson })),
         ),
@@ -222,7 +226,13 @@ export function MapView({
                 : b;
           });
           if (bounds) corridorBoundsRef.current[project.id] = bounds;
-          map.addSource(`corridor-${project.id}`, { type: "geojson", data: geojson });
+          map.addSource(`corridor-${project.id}`, {
+            type: "geojson",
+            data: geojson,
+            // Project overlays are drawn from a mix of Open Data Bristol and
+            // OpenStreetMap/Overpass geometry (see each project's description).
+            attribution: "Project boundaries: © OpenStreetMap contributors, Open Data Bristol",
+          });
         }
 
         const visibleIds = new Set(projects.map((p) => p.id));
