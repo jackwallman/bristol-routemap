@@ -35,6 +35,18 @@ Full reasoning in README.md → "Adding/updating a project".
 
 Set `lastUpdated` to the date you actually re-checked the entry against its source.
 
+## Rules for adding a line to `src/data/rail-service.ts`
+
+Same spirit as above, for the "Just missed it" frequency map's headway data. Full reasoning in
+README.md → "Frequency map".
+
+1. **`headways` figures are read off a real timetable/line-summary page, not estimated.** Where a
+   source gives one blanket frequency for the whole day, use it for every daypart rather than
+   inventing a peak/off-peak split it doesn't support. Where the pattern is uneven, record the
+   longest realistic gap — the feature's premise is missing a train.
+2. **`sourceUrl` is the timetable or line-summary page itself**, never a homepage.
+3. Set `lastUpdated` to the date the headways were actually re-checked.
+
 ## Verifying
 
 `npx tsc -b --noEmit` and `npx oxlint src` both run clean — keep them that way.

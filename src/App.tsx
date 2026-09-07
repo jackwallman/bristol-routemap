@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
 import { MapView } from "./components/MapView";
-import { Sidebar } from "./components/Sidebar";
+import { Sidebar, type SidebarMode } from "./components/Sidebar";
 import { projects } from "./data/projects";
 import { ALL_STATUSES, type ProjectCategory, type ProjectStatus } from "./types/project";
+import type { DayType, Daypart } from "./types/rail";
+import { stationArrivalTimes } from "./lib/railReach";
+import { DEFAULT_WALK_CAP } from "./lib/travelSurface";
 import "./App.css";
 
 const ALL_CATEGORIES: ProjectCategory[] = [
@@ -23,6 +26,19 @@ function App() {
   const [showBusStops, setShowBusStops] = useState(false);
   const [showRailNetwork, setShowRailNetwork] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [mode, setMode] = useState<SidebarMode>("projects");
+  const [originId, setOriginId] = useState<string | null>(null);
+  const [dayType, setDayType] = useState<DayType>("weekday");
+  const [daypart, setDaypart] = useState<Daypart>("midday");
+  const [headwayOverride, setHeadwayOverride] = useState<number | null>(null);
+  const [includePlanned, setIncludePlanned] = useState(false);
+  const [walkCapMinutes, setWalkCapMinutes] = useState(DEFAULT_WALK_CAP);
+
+  const arrivals = useMemo(() => {
+    if (mode !== "frequency" || !originId) return null;
+    return stationArrivalTimes({ originId, dayType, daypart, headwayOverride, includePlanned });
+  }, [mode, originId, dayType, daypart, headwayOverride, includePlanned]);
 
   const filteredProjects = useMemo(
     () =>
@@ -71,6 +87,21 @@ function App() {
         onToggleRailNetwork={() => setShowRailNetwork((v) => !v)}
         selectedId={selectedId}
         onSelect={setSelectedId}
+        mode={mode}
+        onModeChange={setMode}
+        originId={originId}
+        onSelectOrigin={setOriginId}
+        dayType={dayType}
+        onDayType={setDayType}
+        daypart={daypart}
+        onDaypart={setDaypart}
+        headwayOverride={headwayOverride}
+        onHeadwayOverride={setHeadwayOverride}
+        includePlanned={includePlanned}
+        onToggleIncludePlanned={() => setIncludePlanned((v) => !v)}
+        arrivals={arrivals}
+        walkCapMinutes={walkCapMinutes}
+        onWalkCap={setWalkCapMinutes}
       />
       <MapView
         allProjects={projects}
@@ -80,6 +111,12 @@ function App() {
         showCycleNetwork={showCycleNetwork}
         showBusStops={showBusStops}
         showRailNetwork={showRailNetwork}
+        mode={mode}
+        originId={originId}
+        onSelectOrigin={setOriginId}
+        includePlanned={includePlanned}
+        arrivals={arrivals}
+        walkCapMinutes={walkCapMinutes}
       />
     </div>
   );

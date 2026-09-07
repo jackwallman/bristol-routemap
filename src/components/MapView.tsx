@@ -4,6 +4,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Project } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "../types/project";
 import { asset } from "../lib/asset";
+import type { SidebarMode } from "./Sidebar";
+import { stations as railStations } from "../data/rail-service";
+import { renderSurface, type LngLatBounds } from "../lib/travelSurface";
 
 const BRISTOL_CENTER: [number, number] = [-2.5879, 51.4545];
 
@@ -52,6 +55,23 @@ interface MapViewProps {
   showCycleNetwork: boolean;
   showBusStops: boolean;
   showRailNetwork: boolean;
+  mode: SidebarMode;
+  originId: string | null;
+  onSelectOrigin: (id: string) => void;
+  includePlanned: boolean;
+  arrivals: Map<string, number> | null;
+  walkCapMinutes: number;
+}
+
+type ImageCorners = [LngLat, LngLat, LngLat, LngLat];
+
+function boundsToImageCoordinates(bounds: LngLatBounds): ImageCorners {
+  return [
+    [bounds.west, bounds.north],
+    [bounds.east, bounds.north],
+    [bounds.east, bounds.south],
+    [bounds.west, bounds.south],
+  ];
 }
 
 function extendBounds(bounds: Bounds | null, coord: LngLat): Bounds {
@@ -83,12 +103,27 @@ export function MapView({
   showCycleNetwork,
   showBusStops,
   showRailNetwork,
+  mode,
+  originId,
+  onSelectOrigin,
+  includePlanned,
+  arrivals,
+  walkCapMinutes,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Record<string, maplibregl.Marker>>({});
   const corridorBoundsRef = useRef<Record<string, Bounds>>({});
   const corridorLayerIdsRef = useRef<Record<string, string[]>>({});
+  const surfaceCanvasRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
+  // Corridor layers are built asynchronously (after their geometry fetches resolve), so
+  // their initial visibility can't just read the `mode` prop from the mount effect's
+  // closure — that would freeze at whatever mode was active on first render. A ref kept
+  // in sync by the effect below gives that one-time setup the current mode instead.
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
   // Click/hover priority: lines (roads, rail, cycle corridors) checked before
   // area fills, so a route drawn over an LN polygon stays clickable on top.
   const lineLayerIdsRef = useRef<string[]>([]);
@@ -200,6 +235,76 @@ export function MapView({
         layout: { visibility: "none" },
       });
 
+      // "Just missed it" frequency map: station points (clickable, sets the origin)
+      // plus the travel-time surface, an image source repainted whenever the origin
+      // or its options change (see the `arrivals` effect below). Both start hidden;
+      // the mode effect below shows them only in frequency mode.
+      map.addSource("rail-stations", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: railStations.map((s) => ({
+            type: "Feature",
+            properties: { id: s.id, name: s.name, planned: !s.crs },
+            geometry: { type: "Point", coordinates: s.coordinates },
+          })),
+        },
+      });
+      map.addLayer({
+        id: "rail-stations-point",
+        type: "circle",
+        source: "rail-stations",
+        paint: {
+          "circle-radius": ["match", ["get", "id"], "", 8, 5],
+          "circle-color": "#2a78d6",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+        },
+        layout: { visibility: "none" },
+        filter: ["!=", ["get", "planned"], true],
+      });
+      map.addLayer({
+        id: "rail-stations-label",
+        type: "symbol",
+        source: "rail-stations",
+        paint: { "text-color": "#33322e", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+        layout: {
+          visibility: "none",
+          "text-field": ["get", "name"],
+          "text-size": 11,
+          "text-anchor": "left",
+          "text-offset": [0.7, 0],
+          "text-font": ["Noto Sans Regular"],
+          // Without these, the basemap's own place-name labels almost always win the
+          // collision check first and our station labels silently never appear.
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        filter: ["!=", ["get", "planned"], true],
+      });
+      map.on("click", "rail-stations-point", (e) => {
+        const id = e.features?.[0]?.properties?.id;
+        if (id) onSelectOrigin(id);
+      });
+
+      const firstSymbolLayerId = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+      map.addSource("travel-surface", {
+        type: "image",
+        url:
+          "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7",
+        coordinates: boundsToImageCoordinates({ west: -2.62, south: 51.44, east: -2.58, north: 51.46 }),
+      });
+      map.addLayer(
+        {
+          id: "travel-surface-layer",
+          type: "raster",
+          source: "travel-surface",
+          paint: { "raster-opacity": 0.75, "raster-fade-duration": 0 },
+          layout: { visibility: "none" },
+        },
+        firstSymbolLayerId,
+      );
+
       // Corridor / boundary highlight layers, one per project that has geometry.
       // Fetched in parallel but added in a fixed order (all area fills first,
       // then all route lines) so lines always paint — and hit-test — on top.
@@ -242,7 +347,7 @@ export function MapView({
           if (project.geometryType !== "polygon") continue;
           const sourceId = `corridor-${project.id}`;
           const color = CATEGORY_COLORS[project.category];
-          const visibility = visibleIds.has(project.id) ? "visible" : "none";
+          const visibility = modeRef.current !== "frequency" && visibleIds.has(project.id) ? "visible" : "none";
 
           map.addLayer({
             id: `${sourceId}-fill`,
@@ -277,7 +382,7 @@ export function MapView({
           if (project.geometryType !== "line") continue;
           const sourceId = `corridor-${project.id}`;
           const color = CATEGORY_COLORS[project.category];
-          const visibility = visibleIds.has(project.id) ? "visible" : "none";
+          const visibility = modeRef.current !== "frequency" && visibleIds.has(project.id) ? "visible" : "none";
 
           map.addLayer({
             id: `${sourceId}-glow`,
@@ -344,36 +449,132 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isFrequencyMode = mode === "frequency";
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const setVis = () => {
+      // In frequency mode the cycle/bus context layers would just compete visually
+      // with the travel-time surface, and the rail network is forced on so the
+      // surface reads against the tracks it's actually describing.
       if (map.getLayer("cycle-network-line")) {
-        map.setLayoutProperty("cycle-network-line", "visibility", showCycleNetwork ? "visible" : "none");
+        map.setLayoutProperty(
+          "cycle-network-line",
+          "visibility",
+          showCycleNetwork && !isFrequencyMode ? "visible" : "none",
+        );
       }
       if (map.getLayer("bus-stops-point")) {
-        map.setLayoutProperty("bus-stops-point", "visibility", showBusStops ? "visible" : "none");
+        map.setLayoutProperty(
+          "bus-stops-point",
+          "visibility",
+          showBusStops && !isFrequencyMode ? "visible" : "none",
+        );
       }
       if (map.getLayer("rail-network-line")) {
-        map.setLayoutProperty("rail-network-line", "visibility", showRailNetwork ? "visible" : "none");
+        map.setLayoutProperty(
+          "rail-network-line",
+          "visibility",
+          isFrequencyMode || showRailNetwork ? "visible" : "none",
+        );
       }
     };
-    if (map.isStyleLoaded()) setVis();
-    else map.once("load", setVis);
-  }, [showCycleNetwork, showBusStops, showRailNetwork]);
+    // `isStyleLoaded()` can go transiently false long after the initial load (e.g.
+    // while background tiles stream in from panning), and "load" only ever fires
+    // once — so gating entirely on it here would let a toggle silently do nothing.
+    // Apply now (setVis itself no-ops on any layer that doesn't exist yet) and
+    // additionally listen for "load" only as a bootstrap for the rare case where
+    // this effect runs before the map's initial load has happened at all.
+    setVis();
+    if (!map.isStyleLoaded()) map.once("load", setVis);
+  }, [showCycleNetwork, showBusStops, showRailNetwork, isFrequencyMode]);
 
-  // Toggle corridor/boundary layer visibility to match the active category filters.
+  // Toggle corridor/boundary layer visibility to match the active category filters
+  // (and hide every corridor entirely in frequency mode, where the surface takes over).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const visibleIds = new Set(projects.map((p) => p.id));
     Object.entries(corridorLayerIdsRef.current).forEach(([projectId, layerIds]) => {
-      const visibility = visibleIds.has(projectId) ? "visible" : "none";
+      const visibility = !isFrequencyMode && visibleIds.has(projectId) ? "visible" : "none";
       layerIds.forEach((layerId) => {
         if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", visibility);
       });
     });
-  }, [projects]);
+  }, [projects, isFrequencyMode]);
+
+  // Rail station points/labels and the travel-time surface only render in frequency mode.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const setVis = () => {
+      const stationVisibility = isFrequencyMode ? "visible" : "none";
+      if (map.getLayer("rail-stations-point")) {
+        map.setLayoutProperty("rail-stations-point", "visibility", stationVisibility);
+        map.setFilter("rail-stations-point", includePlanned ? null : ["!=", ["get", "planned"], true]);
+      }
+      if (map.getLayer("rail-stations-label")) {
+        map.setLayoutProperty("rail-stations-label", "visibility", stationVisibility);
+        map.setFilter("rail-stations-label", includePlanned ? null : ["!=", ["get", "planned"], true]);
+      }
+      if (map.getLayer("travel-surface-layer")) {
+        map.setLayoutProperty(
+          "travel-surface-layer",
+          "visibility",
+          isFrequencyMode && arrivals ? "visible" : "none",
+        );
+      }
+    };
+    // `isStyleLoaded()` can go transiently false long after the initial load (e.g.
+    // while background tiles stream in from panning), and "load" only ever fires
+    // once — so gating entirely on it here would let a toggle silently do nothing.
+    // Apply now (setVis itself no-ops on any layer that doesn't exist yet) and
+    // additionally listen for "load" only as a bootstrap for the rare case where
+    // this effect runs before the map's initial load has happened at all.
+    setVis();
+    if (!map.isStyleLoaded()) map.once("load", setVis);
+  }, [isFrequencyMode, includePlanned, arrivals]);
+
+  // Highlight the selected origin station with the same amber used for selected corridors.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("rail-stations-point")) return;
+    map.setPaintProperty("rail-stations-point", "circle-radius", [
+      "match",
+      ["get", "id"],
+      originId ?? "",
+      8,
+      5,
+    ]);
+    map.setPaintProperty("rail-stations-point", "circle-stroke-color", [
+      "match",
+      ["get", "id"],
+      originId ?? "",
+      SELECTION_HIGHLIGHT,
+      "#ffffff",
+    ]);
+    map.setPaintProperty("rail-stations-point", "circle-stroke-width", [
+      "match",
+      ["get", "id"],
+      originId ?? "",
+      4,
+      2,
+    ]);
+  }, [originId]);
+
+  // Redraw the travel-time surface whenever the origin or its options change.
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource("travel-surface") as maplibregl.ImageSource | undefined;
+    if (!map || !source) return;
+    if (!arrivals) return;
+    const bounds = renderSurface(surfaceCanvasRef.current, arrivals, walkCapMinutes);
+    source.updateImage({
+      url: surfaceCanvasRef.current.toDataURL(),
+      coordinates: boundsToImageCoordinates(bounds),
+    });
+  }, [arrivals, walkCapMinutes]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -381,6 +582,8 @@ export function MapView({
 
     Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
+
+    if (isFrequencyMode) return;
 
     projects.forEach((project) => {
       if (project.geometryUrl) return;
@@ -397,7 +600,7 @@ export function MapView({
         .addTo(map);
       markersRef.current[project.id] = marker;
     });
-  }, [projects, onSelect]);
+  }, [projects, onSelect, isFrequencyMode]);
 
   // Highlight the selected corridor/boundary, and fit the view to it (or fly to
   // the point marker for projects with no geometry).

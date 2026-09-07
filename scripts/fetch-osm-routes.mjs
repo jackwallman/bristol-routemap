@@ -4,7 +4,7 @@
 // Pass a section name to refresh just one output without re-fetching the rest:
 // node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1,
 // henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path,
-// school-streets, rail-network)
+// school-streets, rail-network, rail-stations)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -372,6 +372,31 @@ const railNetworkQuery = `
 out geom;
 `;
 
+// Station/halt point coordinates, for the "just missed it" frequency map (src/data/rail-service.ts
+// hand-copies these into named entries so the ids stay stable across re-fetches). Passenger
+// stations and halts only, excluding freight-only yards; "usage"!="tourism" drops heritage-railway
+// stops that aren't part of the National Rail network. Same wide bbox as rail-network so it also
+// catches Bath Spa, Weston-super-Mare and Yate.
+const railStationsQuery = `
+[out:json][timeout:60];
+(
+  node["railway"~"^(station|halt)$"]["usage"!="tourism"](51.30,-2.85,51.62,-2.30);
+);
+out body;
+`;
+
+function nodesToGeoJSON(elements) {
+  const nodes = elements.filter((e) => e.type === "node");
+  return {
+    type: "FeatureCollection",
+    features: nodes.map((n) => ({
+      type: "Feature",
+      properties: { osm_id: n.id, name: n.tags?.name, ref: n.tags?.ref },
+      geometry: { type: "Point", coordinates: [n.lon, n.lat] },
+    })),
+  };
+}
+
 async function main() {
   const only = process.argv[2];
   const want = (section) => !only || only === section;
@@ -626,6 +651,17 @@ out geom;
       JSON.stringify(waysToGeoJSON(railNetwork.elements)),
     );
     console.log(`  ${railNetwork.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("rail-stations")) {
+    console.log("Fetching rail stations/halts...");
+    const railStations = await overpassQuery(railStationsQuery);
+    writeFileSync(
+      "public/data/rail_stations.geojson",
+      JSON.stringify(nodesToGeoJSON(railStations.elements)),
+    );
+    console.log(`  ${railStations.elements.length} elements written`);
   }
 
   console.log("Done.");

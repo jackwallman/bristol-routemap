@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { Project, ProjectCategory, ProjectStatus } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS, STATUS_COLORS, STATUS_LABELS } from "../types/project";
+import type { DayType, Daypart } from "../types/rail";
 import { CategoryIcon } from "./CategoryIcon";
 import { ThemeToggle } from "./ThemeToggle";
+import { FrequencyPanel } from "./FrequencyPanel";
 import { asset } from "../lib/asset";
+
+export type SidebarMode = "projects" | "frequency";
 
 // Mobile-only bottom sheet: the puller drags .sidebar's height (vh) between
 // these three snap points, matching the Google Maps app's peek/half/full feel.
@@ -29,6 +33,21 @@ interface SidebarProps {
   onToggleRailNetwork: () => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  mode: SidebarMode;
+  onModeChange: (mode: SidebarMode) => void;
+  originId: string | null;
+  onSelectOrigin: (id: string) => void;
+  dayType: DayType;
+  onDayType: (dayType: DayType) => void;
+  daypart: Daypart;
+  onDaypart: (daypart: Daypart) => void;
+  headwayOverride: number | null;
+  onHeadwayOverride: (minutes: number | null) => void;
+  includePlanned: boolean;
+  onToggleIncludePlanned: () => void;
+  arrivals: Map<string, number> | null;
+  walkCapMinutes: number;
+  onWalkCap: (minutes: number) => void;
 }
 
 export function Sidebar({
@@ -47,6 +66,21 @@ export function Sidebar({
   onToggleRailNetwork,
   selectedId,
   onSelect,
+  mode,
+  onModeChange,
+  originId,
+  onSelectOrigin,
+  dayType,
+  onDayType,
+  daypart,
+  onDaypart,
+  headwayOverride,
+  onHeadwayOverride,
+  includePlanned,
+  onToggleIncludePlanned,
+  arrivals,
+  walkCapMinutes,
+  onWalkCap,
 }: SidebarProps) {
   const cardRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [sheetHeightVh, setSheetHeightVh] = useState(SHEET_HALF_VH);
@@ -110,6 +144,45 @@ export function Sidebar({
         </div>
         <p className="sidebar-subtitle">Transport infrastructure projects</p>
 
+        <div className="mode-switch" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            className={"mode-switch-tab" + (mode === "projects" ? " mode-switch-tab--active" : "")}
+            aria-pressed={mode === "projects"}
+            onClick={() => onModeChange("projects")}
+          >
+            Projects
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={"mode-switch-tab" + (mode === "frequency" ? " mode-switch-tab--active" : "")}
+            aria-pressed={mode === "frequency"}
+            onClick={() => onModeChange("frequency")}
+          >
+            Just missed it
+          </button>
+        </div>
+
+        {mode === "frequency" ? (
+          <FrequencyPanel
+            originId={originId}
+            onSelectOrigin={onSelectOrigin}
+            dayType={dayType}
+            onDayType={onDayType}
+            daypart={daypart}
+            onDaypart={onDaypart}
+            headwayOverride={headwayOverride}
+            onHeadwayOverride={onHeadwayOverride}
+            includePlanned={includePlanned}
+            onToggleIncludePlanned={onToggleIncludePlanned}
+            arrivals={arrivals}
+            walkCapMinutes={walkCapMinutes}
+            onWalkCap={onWalkCap}
+          />
+        ) : (
+          <>
         <section className="filter-section">
           <h2>Categories</h2>
           {allCategories.map((category) => (
@@ -253,6 +326,8 @@ export function Sidebar({
           ))}
           {projects.length === 0 && <p className="empty-state">No projects match the current filters.</p>}
         </section>
+          </>
+        )}
       </div>
     </aside>
   );

@@ -112,7 +112,7 @@ Three layers:
 
   or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`,
   `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`,
-  `school-streets`, `rail-network`) to refresh one output without re-fetching the rest — `bond-street` also
+  `school-streets`, `rail-network`, `rail-stations`) to refresh one output without re-fetching the rest — `bond-street` also
   refreshes `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
   `redcliffe_way_cycle_track.geojson`, since each pair is fetched together. Overpass is a shared
   public resource — this script deliberately fetches one relation at a time with a delay between
@@ -143,6 +143,48 @@ Three layers:
   segments. Stitching OSM ways naturally leaves out-and-back spurs where the trace runs up a side
   road and returns; MapLibre's fill tessellator turns each of those into a stray triangle streaking
   across the polygon. Cut the spurs before committing.
+
+## Frequency map ("Just missed it")
+
+A second sidebar mode illustrates why service frequency matters: pick a station, and the map
+shades every reachable destination by how long it takes to get there having just missed a train
+by 30 seconds — one train ride, optionally one change, then walking the rest of the way at 4.8
+km/h, capped at how far you're willing to walk (10/15/20 min, default 15 — about as far as people
+actually walk to or from a train). A "what if it ran every N minutes?" override swaps in a
+hypothetical headway so the real timetable and a frequent one can be compared directly.
+
+- **`src/types/rail.ts`** — `Station`, `RailLine`, `DayType` (weekday/Saturday/Sunday), `Daypart`.
+  Dayparts are deliberately coarse — five bands (early/AM peak/midday/PM peak/evening) chosen at
+  the boundaries where GB suburban timetables actually change cadence, not on the clock hour for
+  its own sake.
+- **`src/data/rail-service.ts`** — hand-curated station coordinates and line headways, in the same
+  spirit as `projects.ts`: every figure has a `sourceUrl` and a `lastUpdated`, and where a source
+  gives one blanket frequency for the whole day (most GWR/National Rail line summaries do), that
+  same figure is used for every daypart rather than inventing a peak/off-peak split the source
+  doesn't support — see the comment on each line for what's read directly versus inferred.
+  Portishead and Henbury are modelled as `serviceStatus: "planned"` (MetroWest phases 1/2, not yet
+  open), gated behind the "include planned lines" checkbox, with approximate station coordinates
+  since neither has a built platform yet.
+- **`public/data/rail_stations.geojson`** — provenance only, not fetched at runtime (same pattern
+  as `metrobus_network.geojson`): station/halt point coordinates from Overpass, hand-copied into
+  `rail-service.ts` so ids stay stable across re-fetches. Re-fetch with the `rail-stations` section
+  of `fetch-osm-routes.mjs`.
+- **`src/lib/railReach.ts`** — the journey model (Dijkstra-ish, bounded to one change) —
+  `stationArrivalTimes()`. Pure, no React.
+- **`src/lib/travelSurface.ts`** — paints the "missed the train, now walking" surface onto a
+  canvas, rendered as a MapLibre image source. Each pixel is the union of every reachable
+  station's own walk-capped catchment, not an unbounded field — walking 5km from a station isn't
+  realistic, so the surface only shades what a capped walk actually reaches. Pure, no React.
+
+Sourcing rules for `rail-service.ts`, mirroring the project rules below:
+
+1. Every `headways` figure comes from a published GWR/National Rail timetable page or line summary
+   for that route — read it, don't estimate. Where the pattern is uneven, record the longest
+   realistic gap, since the premise of the feature is missing a train.
+2. `sourceUrl` is the timetable/line-summary page itself, not a homepage.
+3. `legMinutes` comes from the same source, in the direction away from Temple Meads; assumed
+   symmetric.
+4. `lastUpdated` is the date the headways were actually re-checked.
 
 ## Adding/updating a project
 
