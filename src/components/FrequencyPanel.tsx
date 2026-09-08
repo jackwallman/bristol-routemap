@@ -7,7 +7,14 @@ import {
   type DayType,
   type Daypart,
 } from "../types/rail";
-import { BANDS, MAX_MINUTES, WALK_CAP_OPTIONS } from "../lib/travelSurface";
+import { CONTOUR_MINUTES, MAX_MINUTES, RAMP, SURFACE_ALPHA_RANGE, WALK_WEIGHT } from "../lib/travelSurface";
+import { buildRampLut, rampGradientStops } from "../lib/colorRamp";
+
+const RAMP_LUT = buildRampLut(RAMP, MAX_MINUTES);
+// Alpha matches the map's, not full opacity, so the legend reads the same weight as the surface.
+const RAMP_GRADIENT = `linear-gradient(90deg, ${rampGradientStops(RAMP_LUT, 24, SURFACE_ALPHA_RANGE)
+  .map((stop) => `${stop.color} ${stop.pct.toFixed(1)}%`)
+  .join(", ")})`;
 
 const OVERRIDE_OPTIONS = [10, 15, 20, 30];
 
@@ -23,8 +30,6 @@ interface FrequencyPanelProps {
   includePlanned: boolean;
   onToggleIncludePlanned: () => void;
   arrivals: Map<string, number> | null;
-  walkCapMinutes: number;
-  onWalkCap: (minutes: number) => void;
 }
 
 export function FrequencyPanel({
@@ -39,8 +44,6 @@ export function FrequencyPanel({
   includePlanned,
   onToggleIncludePlanned,
   arrivals,
-  walkCapMinutes,
-  onWalkCap,
 }: FrequencyPanelProps) {
   const visibleStations = stations
     .filter((s) => s.crs || includePlanned)
@@ -64,10 +67,10 @@ export function FrequencyPanel({
       <p className="frequency-intro">
         Pick a station and imagine you just missed your train by 30 seconds. This shows how long
         it then takes to reach everywhere else — riding one train, optionally changing once, then
-        walking the rest of the way at a normal pace. The shading only covers what's within a
-        {" "}{walkCapMinutes}-minute walk of a station, since that's about as far as most people
-        will walk to or from a train. On an infrequent line, the wait can matter more than the
-        ride.
+        walking the rest of the way at a normal pace. Walking counts for more than riding —
+        {" "}{WALK_WEIGHT}× a minute on the train — since a place you can only reach on foot isn't
+        genuinely "10 minutes away" the way a train stop is. On an infrequent line, the wait can
+        matter more than the ride.
       </p>
 
       <section className="filter-section">
@@ -132,24 +135,6 @@ export function FrequencyPanel({
       </section>
 
       <section className="filter-section">
-        <h2>How far will you walk?</h2>
-        <div className="status-pills">
-          {WALK_CAP_OPTIONS.map((minutes) => (
-            <button
-              key={minutes}
-              type="button"
-              className={"status-pill" + (walkCapMinutes === minutes ? "" : " status-pill--inactive")}
-              style={walkCapMinutes === minutes ? { backgroundColor: "#2a78d6" } : undefined}
-              onClick={() => onWalkCap(minutes)}
-              aria-pressed={walkCapMinutes === minutes}
-            >
-              {minutes} min walk
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="filter-section">
         <h2>What if it were frequent?</h2>
         <label className="filter-row">
           <input
@@ -187,15 +172,35 @@ export function FrequencyPanel({
       <section className="filter-section">
         <h2>Legend</h2>
         <div className="frequency-legend">
-          {BANDS.map((band) => (
-            <span key={band.maxMinutes} className="legend-swatch">
-              <i style={{ backgroundColor: band.color }} />
-              {band.label}
-            </span>
-          ))}
+          <div className="frequency-ramp" style={{ backgroundImage: RAMP_GRADIENT }}>
+            {CONTOUR_MINUTES.map((minutes) => (
+              <span
+                key={minutes}
+                className="frequency-ramp-tick"
+                style={{ left: `${(minutes / MAX_MINUTES) * 100}%` }}
+              />
+            ))}
+          </div>
+          <div className="frequency-ramp-labels">
+            {[0, ...CONTOUR_MINUTES, MAX_MINUTES].map((minutes) => (
+              <span
+                key={minutes}
+                style={{
+                  left: `${(minutes / MAX_MINUTES) * 100}%`,
+                  transform: minutes === 0 ? "none" : minutes === MAX_MINUTES ? "translateX(-100%)" : "translateX(-50%)",
+                }}
+              >
+                {minutes}
+              </span>
+            ))}
+          </div>
+          <p className="frequency-ramp-note">
+            Walking counts {WALK_WEIGHT}× a minute on the train — 30 minutes on foot alone scores
+            {" "}{Math.round(30 * WALK_WEIGHT)}, on the same scale as the train ride above.
+          </p>
           <span className="legend-swatch legend-swatch--muted">
             <i />
-            Over {MAX_MINUTES} min, or over a {walkCapMinutes} min walk from a station
+            Off the scale entirely, once walking is counted
           </span>
         </div>
       </section>

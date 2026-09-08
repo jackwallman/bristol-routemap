@@ -149,9 +149,13 @@ Three layers:
 A second sidebar mode illustrates why service frequency matters: pick a station, and the map
 shades every reachable destination by how long it takes to get there having just missed a train
 by 30 seconds — one train ride, optionally one change, then walking the rest of the way at 4.8
-km/h, capped at how far you're willing to walk (10/15/20 min, default 15 — about as far as people
-actually walk to or from a train). A "what if it ran every N minutes?" override swaps in a
-hypothetical headway so the real timetable and a frequent one can be compared directly.
+km/h. Walking is weighted 2.25x a minute on the train (`WALK_WEIGHT` in `travelSurface.ts`) rather
+than capped at a fixed distance: a place you can only reach on foot isn't genuinely "10 minutes
+away" the way a train stop is, and letting each catchment simply fade out where the weighted score
+passes 90 — instead of stopping dead at a walk radius — is what lets neighbouring catchments merge
+into a continuous field rather than reading as a row of separate discs. A "what if it ran every N
+minutes?" override swaps in a hypothetical headway so the real timetable and a frequent one can be
+compared directly.
 
 - **`src/types/rail.ts`** — `Station`, `RailLine`, `DayType` (weekday/Saturday/Sunday), `Daypart`.
   Dayparts are deliberately coarse — five bands (early/AM peak/midday/PM peak/evening) chosen at
@@ -171,10 +175,20 @@ hypothetical headway so the real timetable and a frequent one can be compared di
   of `fetch-osm-routes.mjs`.
 - **`src/lib/railReach.ts`** — the journey model (Dijkstra-ish, bounded to one change) —
   `stationArrivalTimes()`. Pure, no React.
-- **`src/lib/travelSurface.ts`** — paints the "missed the train, now walking" surface onto a
-  canvas, rendered as a MapLibre image source. Each pixel is the union of every reachable
-  station's own walk-capped catchment, not an unbounded field — walking 5km from a station isn't
-  realistic, so the surface only shades what a capped walk actually reaches. Pure, no React.
+- **`src/lib/travelSurface.ts`** — builds the "missed the train, now walking" surface as an
+  `ImageData`, rendered as a MapLibre image source. Each pixel is the minimum, over every reachable
+  station, of `arrival + WALK_WEIGHT * walk` — there's no separate walk cap, a station's own
+  catchment just runs out where that weighted score would exceed `MAX_MINUTES`, so a fast station's
+  shed reaches further than a slow one's and adjoining catchments merge instead of meeting at a rim.
+  Colour is a continuous OKLab gradient (`src/lib/colorRamp.ts`) rather than discrete bands: opacity
+  rises with the score, each catchment's edge fades out over its last few points before
+  `MAX_MINUTES` instead of cutting off sharply, and thin contour lines mark the 15/30/45/60/75
+  thresholds (on the weighted scale, not clock minutes). `renderSurface()` also returns
+  `sampleAt(lng, lat)`, giving both the weighted score and the real `minutes`/`walkMinutes`
+  breakdown used by the on-map hover readout. Pure, no React. Grid resolution adapts to the
+  reachable extent (roughly constant ground resolution, clamped to a sane range) rather than a
+  fixed size, so a small extent (Clifton Down) isn't blocky and a large one (Severn Beach) isn't
+  wastefully oversampled.
 
 Sourcing rules for `rail-service.ts`, mirroring the project rules below:
 

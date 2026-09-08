@@ -5,8 +5,8 @@ import type { Project } from "../types/project";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "../types/project";
 import { asset } from "../lib/asset";
 import type { SidebarMode } from "./Sidebar";
-import { stations as railStations } from "../data/rail-service";
-import { renderSurface, type LngLatBounds } from "../lib/travelSurface";
+import { stations as railStations, stationsById } from "../data/rail-service";
+import { renderSurface, type LngLatBounds, type TravelSurface } from "../lib/travelSurface";
 
 const BRISTOL_CENTER: [number, number] = [-2.5879, 51.4545];
 
@@ -60,7 +60,6 @@ interface MapViewProps {
   onSelectOrigin: (id: string) => void;
   includePlanned: boolean;
   arrivals: Map<string, number> | null;
-  walkCapMinutes: number;
 }
 
 type ImageCorners = [LngLat, LngLat, LngLat, LngLat];
@@ -108,14 +107,14 @@ export function MapView({
   onSelectOrigin,
   includePlanned,
   arrivals,
-  walkCapMinutes,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Record<string, maplibregl.Marker>>({});
   const corridorBoundsRef = useRef<Record<string, Bounds>>({});
   const corridorLayerIdsRef = useRef<Record<string, string[]>>({});
-  const surfaceCanvasRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
+  const surfaceRef = useRef<TravelSurface | null>(null);
+  const surfacePopupRef = useRef<maplibregl.Popup | null>(null);
   // Corridor layers are built asynchronously (after their geometry fetches resolve), so
   // their initial visibility can't just read the `mode` prop from the mount effect's
   // closure — that would freeze at whatever mode was active on first render. A ref kept
@@ -124,6 +123,11 @@ export function MapView({
   useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
+  // Read by the surface hover handler, registered once at mount — same reasoning as modeRef.
+  const originIdRef = useRef(originId);
+  useEffect(() => {
+    originIdRef.current = originId;
+  }, [originId]);
   // Click/hover priority: lines (roads, rail, cycle corridors) checked before
   // area fills, so a route drawn over an LN polygon stays clickable on top.
   const lineLayerIdsRef = useRef<string[]>([]);
@@ -255,10 +259,10 @@ export function MapView({
         type: "circle",
         source: "rail-stations",
         paint: {
-          "circle-radius": ["match", ["get", "id"], "", 8, 5],
-          "circle-color": "#2a78d6",
+          "circle-radius": ["match", ["get", "id"], "", 7, 4],
+          "circle-color": "#2b2a27",
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff",
+          "circle-stroke-color": "rgba(255, 255, 255, 0.92)",
         },
         layout: { visibility: "none" },
         filter: ["!=", ["get", "planned"], true],
@@ -267,7 +271,7 @@ export function MapView({
         id: "rail-stations-label",
         type: "symbol",
         source: "rail-stations",
-        paint: { "text-color": "#33322e", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+        paint: { "text-color": "#33322e", "text-halo-color": "#ffffff", "text-halo-width": 2 },
         layout: {
           visibility: "none",
           "text-field": ["get", "name"],
@@ -299,11 +303,44 @@ export function MapView({
           id: "travel-surface-layer",
           type: "raster",
           source: "travel-surface",
-          paint: { "raster-opacity": 0.75, "raster-fade-duration": 0 },
+          // Opacity is baked into the surface per-pixel (see renderSurface) — it rises with
+          // travel time and feathers out at the walk-cap edge — so the layer itself stays fully
+          // opaque and just linearly resamples the rendered pixels.
+          paint: { "raster-opacity": 1, "raster-fade-duration": 0, "raster-resampling": "linear" },
           layout: { visibility: "none" },
         },
         firstSymbolLayerId,
       );
+
+      // Hover readout: the real journey to the cursor, read straight out of the last rendered
+      // surface rather than sampling the raster layer itself. Walking is weighted on the map (see
+      // WALK_WEIGHT), so the readout shows the honest clock time and calls out how much of it is
+      // walking rather than just repeating the weighted colour value.
+      const surfacePopup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        className: "surface-readout",
+      });
+      surfacePopupRef.current = surfacePopup;
+      map.on("mousemove", (e) => {
+        if (modeRef.current !== "frequency" || !surfaceRef.current) {
+          surfacePopup.remove();
+          return;
+        }
+        const sample = surfaceRef.current.sampleAt(e.lngLat.lng, e.lngLat.lat);
+        map.getCanvas().style.cursor = "crosshair";
+        if (sample == null) {
+          surfacePopup.remove();
+          return;
+        }
+        const originName = originIdRef.current ? stationsById[originIdRef.current]?.name : null;
+        const walkNote = sample.walkMinutes >= 0.5 ? `, ${Math.round(sample.walkMinutes)} of it walking` : "";
+        surfacePopup
+          .setLngLat(e.lngLat)
+          .setHTML(`${Math.round(sample.minutes)} min${originName ? ` from ${originName}` : ""}${walkNote}`)
+          .addTo(map);
+      });
+      map.on("mouseout", () => surfacePopup.remove());
 
       // Corridor / boundary highlight layers, one per project that has geometry.
       // Fetched in parallel but added in a fixed order (all area fills first,
@@ -425,6 +462,8 @@ export function MapView({
           if (projectId) onSelect(projectId);
         });
         map.on("mousemove", (e) => {
+          // The surface hover handler owns the cursor in frequency mode.
+          if (modeRef.current === "frequency") return;
           map.getCanvas().style.cursor = pickProjectAt(e.point) ? "pointer" : "";
         });
       });
@@ -525,6 +564,9 @@ export function MapView({
           isFrequencyMode && arrivals ? "visible" : "none",
         );
       }
+      // The hover handler only clears the readout on the next mouse move, which would leave it
+      // hanging over the projects map until the pointer happens to twitch.
+      if (!isFrequencyMode) surfacePopupRef.current?.remove();
     };
     // `isStyleLoaded()` can go transiently false long after the initial load (e.g.
     // while background tiles stream in from panning), and "load" only ever fires
@@ -544,21 +586,21 @@ export function MapView({
       "match",
       ["get", "id"],
       originId ?? "",
-      8,
-      5,
+      7,
+      4,
     ]);
-    map.setPaintProperty("rail-stations-point", "circle-stroke-color", [
+    map.setPaintProperty("rail-stations-point", "circle-color", [
       "match",
       ["get", "id"],
       originId ?? "",
       SELECTION_HIGHLIGHT,
-      "#ffffff",
+      "#2b2a27",
     ]);
     map.setPaintProperty("rail-stations-point", "circle-stroke-width", [
       "match",
       ["get", "id"],
       originId ?? "",
-      4,
+      3,
       2,
     ]);
   }, [originId]);
@@ -568,13 +610,17 @@ export function MapView({
     const map = mapRef.current;
     const source = map?.getSource("travel-surface") as maplibregl.ImageSource | undefined;
     if (!map || !source) return;
-    if (!arrivals) return;
-    const bounds = renderSurface(surfaceCanvasRef.current, arrivals, walkCapMinutes);
+    if (!arrivals) {
+      surfaceRef.current = null;
+      return;
+    }
+    const surface = renderSurface(arrivals);
+    surfaceRef.current = surface;
     source.updateImage({
-      url: surfaceCanvasRef.current.toDataURL(),
-      coordinates: boundsToImageCoordinates(bounds),
+      image: surface.image,
+      coordinates: boundsToImageCoordinates(surface.bounds),
     });
-  }, [arrivals, walkCapMinutes]);
+  }, [arrivals]);
 
   useEffect(() => {
     const map = mapRef.current;

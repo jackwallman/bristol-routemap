@@ -5,7 +5,6 @@ import { projects } from "./data/projects";
 import { ALL_STATUSES, type ProjectCategory, type ProjectStatus } from "./types/project";
 import type { DayType, Daypart } from "./types/rail";
 import { stationArrivalTimes } from "./lib/railReach";
-import { DEFAULT_WALK_CAP } from "./lib/travelSurface";
 import "./App.css";
 
 const ALL_CATEGORIES: ProjectCategory[] = [
@@ -33,7 +32,6 @@ function App() {
   const [daypart, setDaypart] = useState<Daypart>("midday");
   const [headwayOverride, setHeadwayOverride] = useState<number | null>(null);
   const [includePlanned, setIncludePlanned] = useState(false);
-  const [walkCapMinutes, setWalkCapMinutes] = useState(DEFAULT_WALK_CAP);
 
   const arrivals = useMemo(() => {
     if (mode !== "frequency" || !originId) return null;
@@ -100,8 +98,6 @@ function App() {
         includePlanned={includePlanned}
         onToggleIncludePlanned={() => setIncludePlanned((v) => !v)}
         arrivals={arrivals}
-        walkCapMinutes={walkCapMinutes}
-        onWalkCap={setWalkCapMinutes}
       />
       <MapView
         allProjects={projects}
@@ -116,7 +112,6 @@ function App() {
         onSelectOrigin={setOriginId}
         includePlanned={includePlanned}
         arrivals={arrivals}
-        walkCapMinutes={walkCapMinutes}
       />
     </div>
   );

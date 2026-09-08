@@ -1,38 +1,62 @@
 import { stationsById } from "../data/rail-service";
+import { buildRampLut, type RampStop } from "./colorRamp";
 
 export const WALK_KMH = 4.8;
 // Straight-line distance underestimates real street distance; this scales it back up.
 export const DETOUR_FACTOR = 1.3;
 export const MAX_MINUTES = 90;
 
-export const WALK_CAP_OPTIONS = [10, 15, 20];
-export const DEFAULT_WALK_CAP = 15;
+// Walking is more onerous than sitting on a train, and the standard planning range for perceived
+// walk time is 1.5-2x in-vehicle. At this weight a 30-minute walk scores 67.5 - deep red - which
+// is the point: a place you can only reach on foot is not "half an hour away", it's a slog. There
+// is no separate walk cap: a station's own catchment simply runs out where the ramp does, at
+// MAX_MINUTES, so slow stations shrink to almost nothing and fast ones bloom.
+export const WALK_WEIGHT = 2.25;
 
-export interface Band {
-  maxMinutes: number;
-  color: string;
-  label: string;
-}
-
-// Green -> amber -> red, darkening as it goes (lightness ~89 -> 82 -> 65 -> 45 -> 29) so the
-// quick/slow ordering still reads under deuteranopia or in greyscale, unlike a flat traffic-light
-// ramp of equally-light hues.
-export const BANDS: Band[] = [
-  { maxMinutes: 15, color: "#d3ebb4", label: "Within 15 min" },
-  { maxMinutes: 30, color: "#f0c74a", label: "Within 30 min" },
-  { maxMinutes: 45, color: "#e08637", label: "Within 45 min" },
-  { maxMinutes: 60, color: "#c9412f", label: "Within 60 min" },
-  { maxMinutes: 90, color: "#85152a", label: "Within 90 min" },
+// Grass -> ember. Bright grassy green while a trip is genuinely quick, then gold, orange, red and
+// down to a near-black oxblood: slow places get darker and heavier until they smother the
+// basemap. Deliberately not colourblind- or greyscale-safe (the gold sits at roughly the same
+// lightness as the green) — the map is optimised for how forcefully "long times bad" reads, not
+// for an ordering that survives desaturation.
+export const RAMP: RampStop[] = [
+  { minutes: 0, color: "#f5fce6" },
+  { minutes: 9, color: "#b9e06b" },
+  { minutes: 20, color: "#8ecb45" },
+  { minutes: 30, color: "#dfb838" },
+  { minutes: 42, color: "#e88a33" },
+  { minutes: 53, color: "#dc5a2b" },
+  { minutes: 65, color: "#bf2f26" },
+  { minutes: 76, color: "#8c1618" },
+  { minutes: 85, color: "#55090e" },
+  { minutes: 90, color: "#2a0407" },
 ];
 
-const BAND_RGB: { maxMinutes: number; rgb: [number, number, number] }[] = BANDS.map((band) => ({
-  maxMinutes: band.maxMinutes,
-  rgb: [
-    parseInt(band.color.slice(1, 3), 16),
-    parseInt(band.color.slice(3, 5), 16),
-    parseInt(band.color.slice(5, 7), 16),
-  ],
-}));
+const RAMP_LUT = buildRampLut(RAMP, MAX_MINUTES);
+const RAMP_LUT_SIZE = RAMP_LUT.length / 3;
+
+// Thin contour lines drawn where the surface crosses these values, so a threshold ("am I within
+// 30 min?") stays readable on what is otherwise a continuous gradient. Values are on the weighted
+// scale the ramp itself uses, same as MAX_MINUTES.
+export const CONTOUR_MINUTES = [15, 30, 45, 60, 75];
+// Kept deliberately faint. Within a single station's catchment the surface is radially symmetric,
+// so its contours are circles centred on the station — draw them with any weight and an isolated
+// catchment reads as a bullseye, the same complaint the old five-band version attracted. At this
+// strength they register as a threshold without becoming a drawn ring.
+const CONTOUR_DARKEN = 0.18;
+const CONTOUR_ALPHA_BOOST = 0.05;
+
+// Alpha rises with travel time — near areas are airy enough to show the basemap through, far
+// areas get heavy enough to smother it — reinforcing "long = bad" through weight, not just hue.
+// Exported so the legend gradient can match the same weight rather than showing every band at
+// full opacity.
+export const SURFACE_ALPHA_RANGE: [number, number] = [0.55, 0.85];
+const [ALPHA_NEAR, ALPHA_FAR] = SURFACE_ALPHA_RANGE;
+// Every catchment fades out over the last few points of score before MAX_MINUTES, rather than
+// stopping dead at a walk cap — so neighbouring catchments merge into a continuous dark field
+// instead of meeting at a hard rim.
+const EDGE_FADE_MINUTES = 8;
+
+const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 const KM_PER_DEGREE_LAT = 111.32;
 
@@ -42,6 +66,17 @@ function walkMinutes(from: [number, number], to: [number, number]): number {
   const dy = (to[1] - from[1]) * KM_PER_DEGREE_LAT;
   const km = Math.sqrt(dx * dx + dy * dy) * DETOUR_FACTOR;
   return (km / WALK_KMH) * 60;
+}
+
+// How far (in walking minutes, then straight-line km) a station's own catchment reaches before
+// the weighted score would exceed MAX_MINUTES — the fast the train got you there, the further you
+// can still walk and stay on the ramp.
+function reachMinutes(arrival: number): number {
+  return Math.max(0, (MAX_MINUTES - arrival) / WALK_WEIGHT);
+}
+
+function reachKm(arrival: number): number {
+  return (reachMinutes(arrival) / 60) * WALK_KMH / DETOUR_FACTOR;
 }
 
 const mercY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
@@ -54,36 +89,31 @@ export interface LngLatBounds {
   north: number;
 }
 
-function bandRgbFor(minutes: number): [number, number, number] | null {
-  for (const band of BAND_RGB) {
-    if (minutes <= band.maxMinutes) return band.rgb;
-  }
-  return null;
-}
-
 /**
- * Bounding box of every reachable station, padded by one capped walk beyond the outermost
- * station — big enough that the surface never clips a station's own walk-shed, small enough to
- * skip drawing distant empty ocean. Bristol has no fixed bbox here on purpose: the reachable set
- * (and hence the useful extent) is completely different from Clifton Down than from Severn Beach.
+ * Bounding box of every reachable station, padded by the single largest catchment radius among
+ * them — big enough that the surface never clips a station's own walk-shed, small enough to skip
+ * drawing distant empty ocean. Bristol has no fixed bbox here on purpose: the reachable set (and
+ * hence the useful extent) is completely different from Clifton Down than from Severn Beach.
  */
-function computeBounds(arrivals: Map<string, number>, capKm: number): LngLatBounds {
+function computeBounds(arrivals: Map<string, number>): LngLatBounds {
   let west = Infinity;
   let south = Infinity;
   let east = -Infinity;
   let north = -Infinity;
-  arrivals.forEach((_arrival, stationId) => {
+  let maxReachKm = 0;
+  arrivals.forEach((arrival, stationId) => {
     const station = stationsById[stationId];
     if (!station) return;
     west = Math.min(west, station.coordinates[0]);
     south = Math.min(south, station.coordinates[1]);
     east = Math.max(east, station.coordinates[0]);
     north = Math.max(north, station.coordinates[1]);
+    maxReachKm = Math.max(maxReachKm, reachKm(arrival));
   });
 
   const midLat = (south + north) / 2 || 51.4545;
-  const padLon = capKm / (Math.cos((midLat * Math.PI) / 180) * KM_PER_DEGREE_LAT);
-  const padLat = capKm / KM_PER_DEGREE_LAT;
+  const padLon = maxReachKm / (Math.cos((midLat * Math.PI) / 180) * KM_PER_DEGREE_LAT);
+  const padLat = maxReachKm / KM_PER_DEGREE_LAT;
 
   return {
     west: west - padLon,
@@ -93,29 +123,56 @@ function computeBounds(arrivals: Map<string, number>, capKm: number): LngLatBoun
   };
 }
 
-const GRID_SIZE = 1024;
+// Target ground resolution, independently clamped per axis. A fixed grid size either wastes
+// resolution on a small extent (Clifton Down) or gets blocky on a large one (Severn Beach) — this
+// keeps pixels roughly the same size on the ground across both, while the clamp keeps the array
+// bounded on a very large or very small extent.
+const METERS_PER_PIXEL = 20;
+const MIN_GRID = 1024;
+const MAX_GRID = 2048;
+
+function gridDimensions(bounds: LngLatBounds): { width: number; height: number } {
+  const midLat = (bounds.south + bounds.north) / 2;
+  const widthKm = (bounds.east - bounds.west) * Math.cos((midLat * Math.PI) / 180) * KM_PER_DEGREE_LAT;
+  const heightKm = (bounds.north - bounds.south) * KM_PER_DEGREE_LAT;
+  const clamp = (px: number) => Math.round(Math.min(MAX_GRID, Math.max(MIN_GRID, px)));
+  return {
+    width: clamp((widthKm * 1000) / METERS_PER_PIXEL),
+    height: clamp((heightKm * 1000) / METERS_PER_PIXEL),
+  };
+}
+
+export interface SurfaceSample {
+  /** The weighted value the colour encodes, 0-90. */
+  score: number;
+  /** The real clock-time journey: arrival + unweighted walk. */
+  minutes: number;
+  /** Of `minutes`, how much is walking. */
+  walkMinutes: number;
+}
+
+export interface TravelSurface {
+  bounds: LngLatBounds;
+  image: ImageData;
+  /** The journey at this point having just missed a train, or null if it's outside the surface. */
+  sampleAt(lng: number, lat: number): SurfaceSample | null;
+}
 
 /**
- * Paints the "just missed it" travel-time surface into `canvas` and returns the lng/lat bounds it
- * covers, for use as a MapLibre canvas/image source's corner coordinates. Every pixel takes the
- * minimum, over all reachable stations, of that station's rail arrival time plus a plain walk from
- * there at WALK_KMH, capped at `walkCapMinutes` — so walking straight from the origin (arrival 0)
- * is automatically part of the minimum wherever it beats waiting for a train, but the surface is
- * the union of capped station catchments rather than an unbounded field: people don't walk 5km to
- * or from a train, so a pixel beyond every station's walk cap is drawn as unreachable even if it
- * is technically within MAX_MINUTES of a very frequent station.
+ * Builds the "just missed it" travel-time surface as an `ImageData`, for use as a MapLibre image
+ * source. Every pixel takes the minimum, over all reachable stations, of that station's rail
+ * arrival time plus a walk from there weighted by WALK_WEIGHT — so walking straight from the
+ * origin (arrival 0) is automatically part of the minimum wherever it beats waiting for a train.
+ * There's no separate walk cap: a station's catchment simply runs out where the weighted score
+ * would exceed MAX_MINUTES, so a fast station's shed reaches further than a slow one's.
  *
  * Rendered by scattering from each station into its own capped pixel window rather than scanning
- * every pixel against every station — with a ~1km cap the window is tiny, so this is orders of
- * magnitude cheaper than the full pixel x station scan a global walk radius would need.
+ * every pixel against every station — with a station-specific reach the window is small, so this
+ * is orders of magnitude cheaper than the full pixel x station scan an unbounded field would need.
  */
-export function renderSurface(
-  canvas: HTMLCanvasElement,
-  arrivals: Map<string, number>,
-  walkCapMinutes: number,
-): LngLatBounds {
-  const capKm = (walkCapMinutes / 60) * WALK_KMH / DETOUR_FACTOR;
-  const bounds = computeBounds(arrivals, capKm);
+export function renderSurface(arrivals: Map<string, number>): TravelSurface {
+  const bounds = computeBounds(arrivals);
+  const { width, height } = gridDimensions(bounds);
   const stationList = Array.from(arrivals.entries())
     .map(([id, arrival]) => ({ coordinates: stationsById[id]?.coordinates, arrival }))
     .filter(
@@ -123,56 +180,119 @@ export function renderSurface(
         s.coordinates != null && s.arrival <= MAX_MINUTES,
     );
 
-  canvas.width = GRID_SIZE;
-  canvas.height = GRID_SIZE;
-  const ctx = canvas.getContext("2d")!;
-  const image = ctx.createImageData(GRID_SIZE, GRID_SIZE);
-
   const northY = mercY(bounds.north);
   const southY = mercY(bounds.south);
-  const rowToLat = (row: number) => invMercY(northY - ((row + 0.5) / GRID_SIZE) * (northY - southY));
-  const colToLon = (col: number) => bounds.west + ((col + 0.5) / GRID_SIZE) * (bounds.east - bounds.west);
-  const latToRow = (lat: number) => ((northY - mercY(lat)) / (northY - southY)) * GRID_SIZE;
-  const lonToCol = (lon: number) => ((lon - bounds.west) / (bounds.east - bounds.west)) * GRID_SIZE;
+  const rowToLat = (row: number) => invMercY(northY - ((row + 0.5) / height) * (northY - southY));
+  const colToLon = (col: number) => bounds.west + ((col + 0.5) / width) * (bounds.east - bounds.west);
+  const latToRow = (lat: number) => ((northY - mercY(lat)) / (northY - southY)) * height;
+  const lonToCol = (lon: number) => ((lon - bounds.west) / (bounds.east - bounds.west)) * width;
 
-  const best = new Float32Array(GRID_SIZE * GRID_SIZE).fill(Infinity);
+  const best = new Float32Array(width * height).fill(Infinity);
+  // The real walk minutes belonging to whichever station won each pixel — used to recover the
+  // real journey (arrival + walk) from the weighted score for the hover readout.
+  const bestWalk = new Float32Array(width * height);
 
   for (const station of stationList) {
+    const reachMin = reachMinutes(station.arrival);
+    if (reachMin <= 0) continue;
+    const stationReachKm = reachKm(station.arrival);
     const [slon, slat] = station.coordinates;
-    const padLon = capKm / (Math.cos((slat * Math.PI) / 180) * KM_PER_DEGREE_LAT);
-    const padLat = capKm / KM_PER_DEGREE_LAT;
+    const padLon = stationReachKm / (Math.cos((slat * Math.PI) / 180) * KM_PER_DEGREE_LAT);
+    const padLat = stationReachKm / KM_PER_DEGREE_LAT;
 
     const rowStart = Math.max(0, Math.floor(latToRow(slat + padLat)));
-    const rowEnd = Math.min(GRID_SIZE - 1, Math.ceil(latToRow(slat - padLat)));
+    const rowEnd = Math.min(height - 1, Math.ceil(latToRow(slat - padLat)));
     const colStart = Math.max(0, Math.floor(lonToCol(slon - padLon)));
-    const colEnd = Math.min(GRID_SIZE - 1, Math.ceil(lonToCol(slon + padLon)));
+    const colEnd = Math.min(width - 1, Math.ceil(lonToCol(slon + padLon)));
 
     for (let row = rowStart; row <= rowEnd; row++) {
       const lat = rowToLat(row);
       for (let col = colStart; col <= colEnd; col++) {
         const lon = colToLon(col);
         const walk = walkMinutes(station.coordinates, [lon, lat]);
-        if (walk > walkCapMinutes) continue;
-        const total = station.arrival + walk;
-        const idx = row * GRID_SIZE + col;
-        if (total < best[idx]) best[idx] = total;
+        if (walk > reachMin) continue;
+        const idx = row * width + col;
+        const total = station.arrival + WALK_WEIGHT * walk;
+        if (total < best[idx]) {
+          best[idx] = total;
+          bestWalk[idx] = walk;
+        }
       }
     }
   }
 
-  for (let i = 0; i < best.length; i++) {
-    const rgb = bandRgbFor(best[i]);
-    const idx = i * 4;
-    if (rgb) {
-      image.data[idx] = rgb[0];
-      image.data[idx + 1] = rgb[1];
-      image.data[idx + 2] = rgb[2];
-      image.data[idx + 3] = 255;
-    } else {
-      image.data[idx + 3] = 0;
+  // Within one catchment the score gradient is WALK_WEIGHT times the walk gradient, so a pixel
+  // step can only legitimately change the score by this much. Anything steeper is the seam where
+  // two catchments meet — a discontinuity, not a slope — and feeding that into the contour width
+  // below would smear a dark band along every seam instead of drawing a hairline.
+  const metersPerPixel =
+    ((bounds.east - bounds.west) * Math.cos(((bounds.south + bounds.north) / 2 * Math.PI) / 180) * KM_PER_DEGREE_LAT * 1000) /
+    width;
+  const maxGradient = WALK_WEIGHT * 2 * ((metersPerPixel / 1000) * DETOUR_FACTOR / WALK_KMH) * 60;
+
+  const image = new ImageData(width, height);
+  const data = image.data;
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const idx = row * width + col;
+      const score = best[idx];
+      const pixel = idx * 4;
+      if (!Number.isFinite(score) || score > MAX_MINUTES) {
+        data[pixel + 3] = 0;
+        continue;
+      }
+
+      const lutIndex = Math.round(Math.min(1, Math.max(0, score / MAX_MINUTES)) * (RAMP_LUT_SIZE - 1)) * 3;
+      let r = RAMP_LUT[lutIndex];
+      let g = RAMP_LUT[lutIndex + 1];
+      let b = RAMP_LUT[lutIndex + 2];
+
+      const feather = smoothstep(Math.min(1, Math.max(0, (MAX_MINUTES - score) / EDGE_FADE_MINUTES)));
+      let alpha = (ALPHA_NEAR + (ALPHA_FAR - ALPHA_NEAR) * Math.min(1, score / MAX_MINUTES)) * feather;
+
+      // Local gradient magnitude, from forward differences — used to keep contour lines a
+      // roughly constant ~1px wide in grid space rather than ballooning across flat stretches of
+      // the surface. Unreachable/out-of-band neighbours contribute no gradient.
+      const right = col + 1 < width && Number.isFinite(best[idx + 1]) ? best[idx + 1] : score;
+      const down = row + 1 < height && Number.isFinite(best[idx + width]) ? best[idx + width] : score;
+      const gradient = Math.min(maxGradient, Math.hypot(right - score, down - score)) || 1e-6;
+
+      let contourDistance = Infinity;
+      for (const contour of CONTOUR_MINUTES) {
+        contourDistance = Math.min(contourDistance, Math.abs(score - contour));
+      }
+      const line = Math.max(0, 1 - contourDistance / (gradient * 1.1));
+      if (line > 0) {
+        const darken = 1 - CONTOUR_DARKEN * line;
+        r *= darken;
+        g *= darken;
+        b *= darken;
+        // Faded by the same feather as the base alpha: without this, a catchment rim that lands
+        // on a contour would draw a hard ring straight through the fade meant to soften it.
+        alpha = Math.min(0.92, alpha + CONTOUR_ALPHA_BOOST * line * feather);
+      }
+
+      data[pixel] = r;
+      data[pixel + 1] = g;
+      data[pixel + 2] = b;
+      data[pixel + 3] = Math.round(alpha * 255);
     }
   }
 
-  ctx.putImageData(image, 0, 0);
-  return bounds;
+  function sampleAt(lng: number, lat: number): SurfaceSample | null {
+    const col = Math.floor(lonToCol(lng));
+    const row = Math.floor(latToRow(lat));
+    if (col < 0 || col >= width || row < 0 || row >= height) return null;
+    const idx = row * width + col;
+    const score = best[idx];
+    if (!Number.isFinite(score) || score > MAX_MINUTES) return null;
+    const walkMinutes = bestWalk[idx];
+    // score = arrival + WALK_WEIGHT * walk, and minutes = arrival + walk, so minutes = score -
+    // (WALK_WEIGHT - 1) * walk — recovered without a third array.
+    const minutes = score - (WALK_WEIGHT - 1) * walkMinutes;
+    return { score, minutes, walkMinutes };
+  }
+
+  return { bounds, image, sampleAt };
 }

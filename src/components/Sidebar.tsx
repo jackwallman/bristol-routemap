@@ -46,8 +46,6 @@ interface SidebarProps {
   includePlanned: boolean;
   onToggleIncludePlanned: () => void;
   arrivals: Map<string, number> | null;
-  walkCapMinutes: number;
-  onWalkCap: (minutes: number) => void;
 }
 
 export function Sidebar({
@@ -79,8 +77,6 @@ export function Sidebar({
   includePlanned,
   onToggleIncludePlanned,
   arrivals,
-  walkCapMinutes,
-  onWalkCap,
 }: SidebarProps) {
   const cardRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [sheetHeightVh, setSheetHeightVh] = useState(SHEET_HALF_VH);
@@ -178,8 +174,6 @@ export function Sidebar({
             includePlanned={includePlanned}
             onToggleIncludePlanned={onToggleIncludePlanned}
             arrivals={arrivals}
-            walkCapMinutes={walkCapMinutes}
-            onWalkCap={onWalkCap}
           />
         ) : (
           <>
