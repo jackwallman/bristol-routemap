@@ -7,11 +7,40 @@ const RAMP_GRADIENT = `linear-gradient(90deg, ${rampGradientStops(RAMP_LUT, 24, 
   .map((stop) => `${stop.color} ${stop.pct.toFixed(1)}%`)
   .join(", ")})`;
 
+const SCALE_MINUTES = [0, ...CONTOUR_MINUTES, MAX_MINUTES];
+// The ramp's axis is a weighted score, not a clock. Read as pure walking it's score/WALK_WEIGHT
+// minutes on foot; read as pure transit (no walk at all) it's the score itself, unweighted. Each
+// pair shares the position of the score it labels, so the two axes line up with the same ticks.
+const WALKING_TICKS = SCALE_MINUTES.map((minutes) => Math.round(minutes / WALK_WEIGHT));
+const TRANSIT_TICKS = SCALE_MINUTES;
+
+function Axis({ values }: { values: number[] }) {
+  return (
+    <div className="frequency-axis">
+      {values.map((value, i) => (
+        <span
+          key={SCALE_MINUTES[i]}
+          style={{
+            left: `${(SCALE_MINUTES[i] / MAX_MINUTES) * 100}%`,
+            transform: i === 0 ? "none" : i === values.length - 1 ? "translateX(-100%)" : "translateX(-50%)",
+          }}
+        >
+          {i === values.length - 1 ? `${value}+` : value}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /** The "just missed it" colour key, drawn as a floating card over the map itself. */
 export function FrequencyLegend() {
   return (
     <div className="map-legend">
       <div className="frequency-legend">
+        <div className="frequency-key-row">
+          <Axis values={WALKING_TICKS} />
+          <span className="frequency-key-label">walking time</span>
+        </div>
         <div className="frequency-ramp" style={{ backgroundImage: RAMP_GRADIENT }}>
           {CONTOUR_MINUTES.map((minutes) => (
             <span
@@ -21,25 +50,11 @@ export function FrequencyLegend() {
             />
           ))}
         </div>
-        <div className="frequency-ramp-labels">
-          {[0, ...CONTOUR_MINUTES, MAX_MINUTES].map((minutes) => (
-            <span
-              key={minutes}
-              style={{
-                left: `${(minutes / MAX_MINUTES) * 100}%`,
-                transform: minutes === 0 ? "none" : minutes === MAX_MINUTES ? "translateX(-100%)" : "translateX(-50%)",
-              }}
-            >
-              {minutes === MAX_MINUTES ? `${minutes}+` : minutes}
-            </span>
-          ))}
+        <div className="frequency-key-row">
+          <Axis values={TRANSIT_TICKS} />
+          <span className="frequency-key-label">transit/waiting time</span>
         </div>
-        <p className="frequency-ramp-note">
-          Walking counts {WALK_WEIGHT}× a minute on the train — 30 minutes on foot alone scores
-          {" "}{Math.round(30 * WALK_WEIGHT)}, on the same scale as the train ride above. The
-          darkest red also covers everywhere further than that — there's no separate colour
-          past it.
-        </p>
+        <p className="frequency-ramp-note">Map colors: combined walking, transit, and waiting time.</p>
       </div>
     </div>
   );
