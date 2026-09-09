@@ -25,8 +25,8 @@ Three layers:
   to be kept current by periodically re-reading the source sites (manually or with AI assistance)
   and editing this file — see the `lastUpdated` field on each entry as the staleness indicator.
 - **`public/data/*.geojson`** (Open Data Bristol) — GIS context layers pulled from their ArcGIS
-  Hub: cycle network (with existing/proposed/aspirational status per segment), bus stops, and the
-  East Bristol LN boundary. Re-fetch with:
+  Hub: cycle network (with existing/proposed/aspirational status per segment) and the East Bristol
+  LN boundary. Re-fetch with:
 
   ```bash
   node scripts/fetch-opendata.mjs
@@ -112,7 +112,7 @@ Three layers:
 
   or pass a section name (`portway`, `bus2`, `metrobus`, `portishead`, `m1`, `henbury`,
   `temple-way`, `bond-street`, `bedminster-bridges`, `redcliffe-way`, `broadmead`, `railway-path`,
-  `school-streets`, `rail-network`, `rail-stations`) to refresh one output without re-fetching the rest — `bond-street` also
+  `school-streets`, `rail-network`, `rail-stations`, `bus-network`) to refresh one output without re-fetching the rest — `bond-street` also
   refreshes `bond_street_cycle_route.geojson` and `redcliffe-way` also refreshes
   `redcliffe_way_cycle_track.geojson`, since each pair is fetched together. Overpass is a shared
   public resource — this script deliberately fetches one relation at a time with a delay between
@@ -137,6 +137,16 @@ Three layers:
   query has to reach a little wider than `ref=POD` + `railway=rail|construction` to get there: the
   final kilometre into the station site is a construction way carrying no `ref` at all, so it's
   pulled in by way id alongside the `railway=disused` stretches.
+
+- **`public/data/bus_network.geojson`** — the bus network context layer (toggled off by default,
+  replacing an earlier bus-stops layer): every road segment used by any `route=bus` relation
+  (First West of England, MetroBus) across the same wider-Bristol bbox as `rail_network.geojson`,
+  deduped across routes that share a street. Open Data Bristol only publishes bus *stop* points,
+  not route lines, so this comes from Overpass the same way `rail_network.geojson` does — a
+  relation query, not a single tag on the way, since "used by a bus route" isn't itself a way
+  property. Re-fetch with the `bus-network` section of `fetch-osm-routes.mjs` below. Not the same
+  thing as `bus_route_2.geojson`/`metrobus_network.geojson` above, which are specific project
+  corridors rather than a general network layer.
 
 - **`public/data/south_bristol_ln_boundary.geojson`** — traced along real road centrelines
   (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint

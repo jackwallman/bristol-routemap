@@ -85,7 +85,7 @@ export function FrequencyPanel({
       </section>
 
       <section className="filter-section">
-        <h2>What if it were frequent?</h2>
+        <h2>What if trains were frequent?</h2>
         <div className="status-pills">
           {OVERRIDE_OPTIONS.map((minutes) => (
             <button

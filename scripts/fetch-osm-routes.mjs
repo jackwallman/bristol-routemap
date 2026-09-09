@@ -4,7 +4,7 @@
 // Pass a section name to refresh just one output without re-fetching the rest:
 // node scripts/fetch-osm-routes.mjs m1   (sections: portway, bus2, metrobus, portishead, m1,
 // henbury, temple-way, bond-street, redcliffe-way, bedminster-bridges, broadmead, railway-path,
-// school-streets, rail-network, rail-stations)
+// school-streets, rail-network, rail-stations, bus-network)
 //
 // Data is © OpenStreetMap contributors, ODbL — see https://www.openstreetmap.org/copyright
 // Overpass is a shared public resource: this script fetches one relation at a
@@ -382,6 +382,22 @@ const railNetworkQuery = `
 out geom;
 `;
 
+// Bus network context layer: every road segment used by any First West of England/MetroBus
+// route=bus relation in the Bristol/WoE area, deduped across routes that share the same street
+// (a two-step relation -> member-way query, since "used by a bus route" isn't a tag on the way
+// itself). Same bbox as rail-network, for a comparable "where the network reaches" overlay. This
+// intentionally supersedes the old bus-stops context layer (Open Data Bristol only publishes stop
+// points, not route lines) — it is not the same thing as bus_route_2.geojson/metrobus_network.geojson,
+// which are specific project corridors, not a general network layer.
+const busNetworkQuery = `
+[out:json][timeout:180];
+(
+  rel["route"="bus"](51.32,-2.80,51.56,-2.40);
+)->.routes;
+way(r.routes)(51.32,-2.80,51.56,-2.40);
+out geom;
+`;
+
 // Station/halt point coordinates, for the "just missed it" frequency map (src/data/rail-service.ts
 // hand-copies these into named entries so the ids stay stable across re-fetches). Passenger
 // stations and halts only, excluding freight-only yards; "usage"!="tourism" drops heritage-railway
@@ -687,6 +703,17 @@ out geom;
       JSON.stringify(nodesToGeoJSON(railStations.elements)),
     );
     console.log(`  ${railStations.elements.length} elements written`);
+    await sleep(6000);
+  }
+
+  if (want("bus-network")) {
+    console.log("Fetching bus network...");
+    const busNetwork = await overpassQuery(busNetworkQuery);
+    writeFileSync(
+      "public/data/bus_network.geojson",
+      JSON.stringify(waysToGeoJSON(busNetwork.elements)),
+    );
+    console.log(`  ${busNetwork.elements.length} elements written`);
   }
 
   console.log("Done.");

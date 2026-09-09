@@ -54,7 +54,7 @@ interface MapViewProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   showCycleNetwork: boolean;
-  showBusStops: boolean;
+  showBusRoutes: boolean;
   showRailNetwork: boolean;
   mode: SidebarMode;
   originId: string | null;
@@ -101,7 +101,7 @@ export function MapView({
   selectedId,
   onSelect,
   showCycleNetwork,
-  showBusStops,
+  showBusRoutes,
   showRailNetwork,
   mode,
   originId,
@@ -254,19 +254,19 @@ export function MapView({
         });
       }
 
-      map.addSource("bus-stops", {
+      map.addSource("bus-network", {
         type: "geojson",
-        data: asset("/data/bus_stops.geojson"),
-        attribution: "Bus stops © Open Data Bristol",
+        data: asset("/data/bus_network.geojson"),
+        attribution: "Bus network © OpenStreetMap contributors",
       });
       map.addLayer({
-        id: "bus-stops-point",
-        type: "circle",
-        source: "bus-stops",
+        id: "bus-network-line",
+        type: "line",
+        source: "bus-network",
         paint: {
-          "circle-radius": 3,
-          "circle-color": "#f57c00",
-          "circle-opacity": 0.7,
+          "line-color": "#f57c00",
+          "line-width": 1.5,
+          "line-opacity": 0.7,
         },
         layout: { visibility: "none" },
       });
@@ -546,11 +546,11 @@ export function MapView({
           showCycleNetwork && !isFrequencyMode ? "visible" : "none",
         );
       }
-      if (map.getLayer("bus-stops-point")) {
+      if (map.getLayer("bus-network-line")) {
         map.setLayoutProperty(
-          "bus-stops-point",
+          "bus-network-line",
           "visibility",
-          showBusStops && !isFrequencyMode ? "visible" : "none",
+          showBusRoutes && !isFrequencyMode ? "visible" : "none",
         );
       }
       if (map.getLayer("rail-network-line")) {
@@ -569,7 +569,7 @@ export function MapView({
     // this effect runs before the map's initial load has happened at all.
     setVis();
     if (!map.isStyleLoaded()) map.once("load", setVis);
-  }, [showCycleNetwork, showBusStops, showRailNetwork, isFrequencyMode]);
+  }, [showCycleNetwork, showBusRoutes, showRailNetwork, isFrequencyMode]);
 
   // Toggle corridor/boundary layer visibility to match the active category filters
   // (and hide every corridor entirely in frequency mode, where the surface takes over).

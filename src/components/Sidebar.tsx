@@ -27,8 +27,8 @@ interface SidebarProps {
   onToggleStatus: (status: ProjectStatus) => void;
   showCycleNetwork: boolean;
   onToggleCycleNetwork: () => void;
-  showBusStops: boolean;
-  onToggleBusStops: () => void;
+  showBusRoutes: boolean;
+  onToggleBusRoutes: () => void;
   showRailNetwork: boolean;
   onToggleRailNetwork: () => void;
   selectedId: string | null;
@@ -58,8 +58,8 @@ export function Sidebar({
   onToggleStatus,
   showCycleNetwork,
   onToggleCycleNetwork,
-  showBusStops,
-  onToggleBusStops,
+  showBusRoutes,
+  onToggleBusRoutes,
   showRailNetwork,
   onToggleRailNetwork,
   selectedId,
@@ -216,8 +216,8 @@ export function Sidebar({
             </div>
           )}
           <label className="filter-row">
-            <input type="checkbox" checked={showBusStops} onChange={onToggleBusStops} />
-            Bus stops (Open Data Bristol)
+            <input type="checkbox" checked={showBusRoutes} onChange={onToggleBusRoutes} />
+            Bus routes (OpenStreetMap)
           </label>
           <label className="filter-row">
             <input type="checkbox" checked={showRailNetwork} onChange={onToggleRailNetwork} />

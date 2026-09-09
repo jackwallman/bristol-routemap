@@ -22,7 +22,7 @@ function App() {
     new Set(ALL_STATUSES),
   );
   const [showCycleNetwork, setShowCycleNetwork] = useState(true);
-  const [showBusStops, setShowBusStops] = useState(false);
+  const [showBusRoutes, setShowBusRoutes] = useState(false);
   const [showRailNetwork, setShowRailNetwork] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -79,8 +79,8 @@ function App() {
         onToggleStatus={toggleStatus}
         showCycleNetwork={showCycleNetwork}
         onToggleCycleNetwork={() => setShowCycleNetwork((v) => !v)}
-        showBusStops={showBusStops}
-        onToggleBusStops={() => setShowBusStops((v) => !v)}
+        showBusRoutes={showBusRoutes}
+        onToggleBusRoutes={() => setShowBusRoutes((v) => !v)}
         showRailNetwork={showRailNetwork}
         onToggleRailNetwork={() => setShowRailNetwork((v) => !v)}
         selectedId={selectedId}
@@ -105,7 +105,7 @@ function App() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         showCycleNetwork={showCycleNetwork}
-        showBusStops={showBusStops}
+        showBusRoutes={showBusRoutes}
         showRailNetwork={showRailNetwork}
         mode={mode}
         originId={originId}
