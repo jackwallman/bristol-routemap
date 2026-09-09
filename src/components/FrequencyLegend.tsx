@@ -38,8 +38,8 @@ export function FrequencyLegend() {
     <div className="map-legend">
       <div className="frequency-legend">
         <div className="frequency-key-row">
-          <Axis values={WALKING_TICKS} />
           <span className="frequency-key-label">walking time</span>
+          <Axis values={WALKING_TICKS} />
         </div>
         <div className="frequency-ramp" style={{ backgroundImage: RAMP_GRADIENT }}>
           {TICK_MINUTES.map((minutes) => (
