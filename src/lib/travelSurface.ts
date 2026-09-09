@@ -34,16 +34,10 @@ export const RAMP: RampStop[] = [
 const RAMP_LUT = buildRampLut(RAMP, MAX_MINUTES);
 const RAMP_LUT_SIZE = RAMP_LUT.length / 3;
 
-// Thin contour lines drawn where the surface crosses these values, so a threshold ("am I within
-// 30 min?") stays readable on what is otherwise a continuous gradient. Values are on the weighted
-// scale the ramp itself uses, same as MAX_MINUTES.
-export const CONTOUR_MINUTES = [15, 30, 45, 60, 75];
-// Kept deliberately faint. Within a single station's catchment the surface is radially symmetric,
-// so its contours are circles centred on the station — draw them with any weight and an isolated
-// catchment reads as a bullseye, the same complaint the old five-band version attracted. At this
-// strength they register as a threshold without becoming a drawn ring.
-const CONTOUR_DARKEN = 0.18;
-const CONTOUR_ALPHA_BOOST = 0.05;
+// Reference points on the weighted scale, same units as MAX_MINUTES — used only for the legend's
+// axis ticks, not drawn on the surface itself (an isolated catchment is radially symmetric, so
+// drawn threshold lines read as a bullseye rather than a useful marker).
+export const TICK_MINUTES = [15, 30, 45, 60, 75];
 
 // Alpha rises with travel time — near areas are airy enough to show the basemap through, far
 // areas get heavy enough to smother it — reinforcing "long = bad" through weight, not just hue.
@@ -233,15 +227,6 @@ export function renderSurface(arrivals: Map<string, number>, viewBounds?: LngLat
     }
   }
 
-  // Within one catchment the score gradient is WALK_WEIGHT times the walk gradient, so a pixel
-  // step can only legitimately change the score by this much. Anything steeper is the seam where
-  // two catchments meet — a discontinuity, not a slope — and feeding that into the contour width
-  // below would smear a dark band along every seam instead of drawing a hairline.
-  const metersPerPixel =
-    ((bounds.east - bounds.west) * Math.cos(((bounds.south + bounds.north) / 2 * Math.PI) / 180) * KM_PER_DEGREE_LAT * 1000) /
-    width;
-  const maxGradient = WALK_WEIGHT * 2 * ((metersPerPixel / 1000) * DETOUR_FACTOR / WALK_KMH) * 60;
-
   const image = new ImageData(width, height);
   const data = image.data;
 
@@ -271,27 +256,7 @@ export function renderSurface(arrivals: Map<string, number>, viewBounds?: LngLat
       // No edge fade: a catchment's own outer edge now hands off directly to the off-scale fill
       // above (same darkest colour, same ALPHA_FAR), so alpha just rises to that value rather
       // than dipping back toward transparent right where it would otherwise meet solid colour.
-      let alpha = ALPHA_NEAR + (ALPHA_FAR - ALPHA_NEAR) * Math.min(1, score / MAX_MINUTES);
-
-      // Local gradient magnitude, from forward differences — used to keep contour lines a
-      // roughly constant ~1px wide in grid space rather than ballooning across flat stretches of
-      // the surface. Unreachable/out-of-band neighbours contribute no gradient.
-      const right = col + 1 < width && Number.isFinite(best[idx + 1]) ? best[idx + 1] : score;
-      const down = row + 1 < height && Number.isFinite(best[idx + width]) ? best[idx + width] : score;
-      const gradient = Math.min(maxGradient, Math.hypot(right - score, down - score)) || 1e-6;
-
-      let contourDistance = Infinity;
-      for (const contour of CONTOUR_MINUTES) {
-        contourDistance = Math.min(contourDistance, Math.abs(score - contour));
-      }
-      const line = Math.max(0, 1 - contourDistance / (gradient * 1.1));
-      if (line > 0) {
-        const darken = 1 - CONTOUR_DARKEN * line;
-        r *= darken;
-        g *= darken;
-        b *= darken;
-        alpha = Math.min(0.92, alpha + CONTOUR_ALPHA_BOOST * line);
-      }
+      const alpha = ALPHA_NEAR + (ALPHA_FAR - ALPHA_NEAR) * Math.min(1, score / MAX_MINUTES);
 
       data[pixel] = r;
       data[pixel + 1] = g;

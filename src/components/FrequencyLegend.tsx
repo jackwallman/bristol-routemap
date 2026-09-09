@@ -1,4 +1,4 @@
-import { CONTOUR_MINUTES, MAX_MINUTES, RAMP, SURFACE_ALPHA_RANGE, WALK_WEIGHT } from "../lib/travelSurface";
+import { TICK_MINUTES, MAX_MINUTES, RAMP, SURFACE_ALPHA_RANGE, WALK_WEIGHT } from "../lib/travelSurface";
 import { buildRampLut, rampGradientStops } from "../lib/colorRamp";
 
 const RAMP_LUT = buildRampLut(RAMP, MAX_MINUTES);
@@ -7,7 +7,7 @@ const RAMP_GRADIENT = `linear-gradient(90deg, ${rampGradientStops(RAMP_LUT, 24, 
   .map((stop) => `${stop.color} ${stop.pct.toFixed(1)}%`)
   .join(", ")})`;
 
-const SCALE_MINUTES = [0, ...CONTOUR_MINUTES, MAX_MINUTES];
+const SCALE_MINUTES = [0, ...TICK_MINUTES, MAX_MINUTES];
 // The ramp's axis is a weighted score, not a clock. Read as pure walking it's score/WALK_WEIGHT
 // minutes on foot; read as pure transit (no walk at all) it's the score itself, unweighted. Each
 // pair shares the position of the score it labels, so the two axes line up with the same ticks.
@@ -42,7 +42,7 @@ export function FrequencyLegend() {
           <span className="frequency-key-label">walking time</span>
         </div>
         <div className="frequency-ramp" style={{ backgroundImage: RAMP_GRADIENT }}>
-          {CONTOUR_MINUTES.map((minutes) => (
+          {TICK_MINUTES.map((minutes) => (
             <span
               key={minutes}
               className="frequency-ramp-tick"
