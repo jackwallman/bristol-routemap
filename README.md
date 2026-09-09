@@ -131,6 +131,13 @@ Three layers:
   separate project entry, `henbury-line`). Re-fetch with the `rail-network` section of
   `fetch-osm-routes.mjs` below.
 
+  Because of that exclusion, the frequency map draws `portishead_line.geojson` and
+  `henbury_line.geojson` as dashed grey track of their own whenever "include planned" is on —
+  otherwise Portishead and Pill would be dots floating in empty space. The Portishead corridor
+  query has to reach a little wider than `ref=POD` + `railway=rail|construction` to get there: the
+  final kilometre into the station site is a construction way carrying no `ref` at all, so it's
+  pulled in by way id alongside the `railway=disused` stretches.
+
 - **`public/data/south_bristol_ln_boundary.geojson`** — traced along real road centrelines
   (Coronation Road, Ashton Road, Winterstoke Road, Bedminster Down Road, Bedminster Road, Saint
   John's Lane, Wells Road, via Overpass) to match BCC's published study-area map, with a few short
@@ -160,19 +167,37 @@ compared directly.
 - **`src/types/rail.ts`** — `Station`, `RailLine`, `DayType` (weekday/Saturday/Sunday), `Daypart`.
   Dayparts are deliberately coarse — five bands (early/AM peak/midday/PM peak/evening) chosen at
   the boundaries where GB suburban timetables actually change cadence, not on the clock hour for
-  its own sake.
+  its own sake. They are storage buckets, not the options the sidebar offers; `DAYPART_BOUNDS`
+  gives each one a start/end minute so the two can be derived apart.
+- **`src/lib/serviceBands.ts`** — derives the Day and Time-of-day pills from the data instead of
+  listing them. Day types, and adjacent dayparts, whose headways are identical on *every* line get
+  collapsed into a single option, labelled by the clock times where the frequency actually changes
+  ("Mon–Sat", "07:00–19:00"). This falls out of the sourcing rule below: a source that says
+  "hourly, all day, every day" fills fifteen cells with one number, and offering fifteen buttons
+  for one answer implies a precision the data hasn't got. Record a genuine Saturday or peak
+  difference from a timetable and the merged pill splits again on its own — nothing to update
+  here. Merging is computed over the whole network rather than per-origin: nearly every station
+  reaches Temple Meads within one change, so per-origin lands on the same bands in practice while
+  making the pills shift about as you change origin. Pure, no React.
 - **`src/data/rail-service.ts`** — hand-curated station coordinates and line headways, in the same
   spirit as `projects.ts`: every figure has a `sourceUrl` and a `lastUpdated`, and where a source
   gives one blanket frequency for the whole day (most GWR/National Rail line summaries do), that
   same figure is used for every daypart rather than inventing a peak/off-peak split the source
   doesn't support — see the comment on each line for what's read directly versus inferred.
   Portishead and Henbury are modelled as `serviceStatus: "planned"` (MetroWest phases 1/2, not yet
-  open), gated behind the "include planned lines" checkbox, with approximate station coordinates
-  since neither has a built platform yet.
+  open) and gated behind the "include planned lines" checkbox; a station counts as planned when it
+  has no `crs`, since that's allocated at opening. Ashley Down is *not* one of them — it opened in
+  September 2024 with CRS ASD, and its hourly Temple Meads–Filton Abbey Wood shuttle is its own
+  open line (`bristol-filton-local`) rather than part of the Gloucester stopping service, which
+  runs the same tracks but doesn't call there.
 - **`public/data/rail_stations.geojson`** — provenance only, not fetched at runtime (same pattern
-  as `metrobus_network.geojson`): station/halt point coordinates from Overpass, hand-copied into
-  `rail-service.ts` so ids stay stable across re-fetches. Re-fetch with the `rail-stations` section
-  of `fetch-osm-routes.mjs`.
+  as `metrobus_network.geojson`): station point coordinates from Overpass, hand-copied into
+  `rail-service.ts` so ids stay stable across re-fetches. Covers open stations
+  (`railway=station|halt`) *and* ones that are only planned or being built
+  (`proposed:`/`construction:railway`), which is where the unbuilt MetroWest stations get their
+  coordinates: mappers have surveyed those sites onto the alignment, whereas positions eyeballed
+  from a scheme's publicity map land hundreds of metres off the track they're meant to sit on.
+  Re-fetch with the `rail-stations` section of `fetch-osm-routes.mjs`.
 - **`src/lib/railReach.ts`** — the journey model (Dijkstra-ish, bounded to one change) —
   `stationArrivalTimes()`. Pure, no React.
 - **`src/lib/travelSurface.ts`** — builds the "missed the train, now walking" surface as an

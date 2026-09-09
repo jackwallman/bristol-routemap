@@ -1,14 +1,18 @@
 import type { RailLine, Station } from "../types/rail";
 
-// Station coordinates fetched from OpenStreetMap (railway=station|halt) via
-// scripts/fetch-osm-routes.mjs rail-stations -> public/data/rail_stations.geojson,
-// hand-copied here so ids stay stable across re-fetches. Planned (unbuilt) stations
-// have no OSM node yet; their coordinates are approximate, from the schemes' own
-// publicity material, and are flagged as such below.
+// Station coordinates fetched from OpenStreetMap via scripts/fetch-osm-routes.mjs
+// rail-stations -> public/data/rail_stations.geojson, hand-copied here so ids stay
+// stable across re-fetches. The query covers open stations (railway=station|halt) and
+// stations that are only planned or being built (proposed:/construction:railway), so
+// every coordinate here is a surveyed OSM node sitting on the track rather than an
+// eyeballed position from a scheme's publicity map.
 export const stations: Station[] = [
   { id: "bristol-temple-meads", name: "Bristol Temple Meads", crs: "BRI", coordinates: [-2.5804029, 51.4490991] },
   { id: "lawrence-hill", name: "Lawrence Hill", crs: "LWH", coordinates: [-2.56417, 51.45858] },
   { id: "stapleton-road", name: "Stapleton Road", crs: "SRD", coordinates: [-2.5663184, 51.467446] },
+  // Opened 2024-09-28 — an operational station, not a MetroWest aspiration, even though it
+  // was delivered under the same programme and will also be served by the planned Henbury line.
+  { id: "ashley-down", name: "Ashley Down", crs: "ASD", coordinates: [-2.5766511, 51.4781307] },
   { id: "montpelier", name: "Montpelier", crs: "MTP", coordinates: [-2.5881158, 51.4683357] },
   { id: "redland", name: "Redland", crs: "RDA", coordinates: [-2.5989091, 51.4683779] },
   { id: "clifton-down", name: "Clifton Down", crs: "CFN", coordinates: [-2.6114362, 51.4644315] },
@@ -33,15 +37,15 @@ export const stations: Station[] = [
   { id: "severn-tunnel-junction", name: "Severn Tunnel Junction", crs: "STJ", coordinates: [-2.7772968, 51.584253] },
   { id: "caldicot", name: "Caldicot", crs: "CDT", coordinates: [-2.7597685, 51.5845063] },
 
-  // Planned (MetroWest, "underway" per src/data/projects.ts) — not yet built, so no OSM
-  // node and no allocated CRS code. Coordinates are approximate (station-site level, not
-  // platform-level), from the scheme pages linked below; re-check against the Full
-  // Business Case if the siting changes.
-  { id: "pill", name: "Pill", coordinates: [-2.6844, 51.4972] },
-  { id: "portishead", name: "Portishead", coordinates: [-2.7658, 51.4885] },
-  { id: "ashley-down", name: "Ashley Down", coordinates: [-2.5766511, 51.4781307] },
-  { id: "north-filton", name: "North Filton (Brabazon)", coordinates: [-2.584, 51.5145] },
-  { id: "henbury", name: "Henbury", coordinates: [-2.6469, 51.5219] },
+  // Planned (MetroWest, "underway" per src/data/projects.ts) — no platform built yet and no
+  // allocated CRS code, so no `crs`, which is what marks a station as planned throughout the
+  // UI. Coordinates are the OSM proposed:/construction:railway=station nodes for each site
+  // (North Filton is tagged there as "Bristol Brabazon", CRS BBZ once allocated); all four sit
+  // within a few metres of the alignment. Re-check if a Full Business Case moves a site.
+  { id: "pill", name: "Pill", coordinates: [-2.6869069, 51.4812677] },
+  { id: "portishead", name: "Portishead", coordinates: [-2.7561519, 51.4834666] },
+  { id: "north-filton", name: "North Filton (Brabazon)", coordinates: [-2.5809286, 51.5175324] },
+  { id: "henbury", name: "Henbury", coordinates: [-2.6185806, 51.5146306] },
 ];
 
 // Headways are minutes between departures, per day-type and daypart. Sourced from each
@@ -162,6 +166,34 @@ export const lines: RailLine[] = [
     lastUpdated: "2026-09-07",
   },
 
+  // The local shuttle that serves Ashley Down, which opened in September 2024. GWR's station
+  // page states it plainly: "served in each direction by hourly services between Bristol Temple
+  // Meads and Filton Abbey Wood from Monday to Saturday, with limited services on Sundays",
+  // calling additionally at Stapleton Road and Lawrence Hill. It runs the same Filton Bank
+  // tracks as the Gloucester and South Wales services but has its own, much more local calling
+  // pattern, so it's modelled separately rather than folded into bristol-gloucester.
+  //
+  // Leg times and the Sunday figure are read off the public timetable listing rather than
+  // GWR's prose, which only says "limited": Sunday has six trains each way (10:11, 11:17,
+  // 13:25, 14:21, 16:20, 18:23 northbound), so nothing before 09:30 or after 19:00 and gaps of
+  // up to ~2 hours in between — hence 120, the longest realistic wait, per the README rule.
+  // Weekday/Saturday evenings are hourly until a final train around 21:30, a ~76 min gap that
+  // the hourly figure understates slightly.
+  {
+    id: "bristol-filton-local",
+    name: "Bristol–Filton Abbey Wood local (via Ashley Down)",
+    stations: ["bristol-temple-meads", "lawrence-hill", "stapleton-road", "ashley-down", "filton-abbey-wood"],
+    legMinutes: [3, 2, 3, 4],
+    headways: {
+      weekday: { early: null, am_peak: 60, midday: 60, pm_peak: 60, evening: 60 },
+      saturday: { early: null, am_peak: 60, midday: 60, pm_peak: 60, evening: 60 },
+      sunday: { early: null, am_peak: null, midday: 120, pm_peak: 120, evening: null },
+    },
+    sourceName: "GWR: Ashley Down station",
+    sourceUrl: "https://www.gwr.com/stations-and-destinations/stations/new-stations/ashley-down",
+    lastUpdated: "2026-09-09",
+  },
+
   // Wikipedia (Severn Tunnel Junction): GWR service toward Bristol/Taunton runs hourly on
   // weekdays, Saturdays AND Sundays — one of the few lines here with a fully-confirmed,
   // uniform figure across all three day types.
@@ -210,14 +242,16 @@ export const lines: RailLine[] = [
 
   // MetroWest Phase 2 (Henbury line, underway — see metrowest-henbury-line in projects.ts).
   // A half-hourly option was studied and found technically feasible but unaffordable; the
-  // funded plan is hourly. Ashley Down is a new/reopened station on the same Bristol-Filton
-  // corridor, part of the same programme, so it's placed on this line. Not open yet — same
+  // funded plan is hourly. Ashley Down is already open and already has trains (see
+  // bristol-filton-local above); GWR's station page says this line will call there too, so it
+  // stays on both. The shared Temple Meads-Ashley Down-Filton Abbey Wood legs use the times
+  // measured off the running shuttle rather than a separate estimate. Not open yet — same
   // caveat as Portishead above.
   {
     id: "henbury",
     name: "Henbury Line (planned, MetroWest Phase 2)",
     stations: ["bristol-temple-meads", "ashley-down", "filton-abbey-wood", "north-filton", "henbury"],
-    legMinutes: [6, 5, 4, 6],
+    legMinutes: [8, 4, 4, 6],
     headways: {
       weekday: { early: null, am_peak: 60, midday: 60, pm_peak: 60, evening: 60 },
       saturday: { early: null, am_peak: 60, midday: 60, pm_peak: 60, evening: 60 },

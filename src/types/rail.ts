@@ -14,12 +14,17 @@ export const DAY_TYPE_LABELS: Record<DayType, string> = {
 // the clock hour for its own sake: the weekday am/pm peaks are the two windows
 // operators actually timetable extra trains around, and "early"/"evening" are
 // where services thin out or stop.
-export const DAYPART_LABELS: Record<Daypart, string> = {
-  early: "Early (before 07:00)",
-  am_peak: "AM peak (07:00–09:30)",
-  midday: "Midday (09:30–16:00)",
-  pm_peak: "PM peak (16:00–19:00)",
-  evening: "Evening (after 19:00)",
+//
+// These are storage buckets, not the options the UI offers. Adjacent buckets
+// carrying the same headway on every line are merged into one selectable band
+// by src/lib/serviceBands.ts, so a pill only ever appears where the frequency
+// genuinely changes. Minutes are from midnight; 1440 is end of day.
+export const DAYPART_BOUNDS: Record<Daypart, { startMinutes: number; endMinutes: number }> = {
+  early: { startMinutes: 0, endMinutes: 420 },
+  am_peak: { startMinutes: 420, endMinutes: 570 },
+  midday: { startMinutes: 570, endMinutes: 960 },
+  pm_peak: { startMinutes: 960, endMinutes: 1140 },
+  evening: { startMinutes: 1140, endMinutes: 1440 },
 };
 
 export interface Station {

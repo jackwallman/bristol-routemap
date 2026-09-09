@@ -222,6 +222,33 @@ export function MapView({
         layout: { visibility: "none" },
       });
 
+      // rail_network.geojson is deliberately "what exists" — it excludes railway=construction —
+      // and the project corridor layers are all hidden in frequency mode. Without these, the
+      // Portishead and Henbury stations would be dots floating in empty space whenever
+      // "include planned" is on. Dashed, in the same grey, to read as track that isn't there yet.
+      for (const planned of [
+        { id: "portishead", file: "/data/portishead_line.geojson" },
+        { id: "henbury", file: "/data/henbury_line.geojson" },
+      ]) {
+        map.addSource(`rail-planned-${planned.id}`, {
+          type: "geojson",
+          data: asset(planned.file),
+          attribution: "Rail network © OpenStreetMap contributors",
+        });
+        map.addLayer({
+          id: `rail-planned-${planned.id}-line`,
+          type: "line",
+          source: `rail-planned-${planned.id}`,
+          paint: {
+            "line-color": "#5c5c5c",
+            "line-width": 1.5,
+            "line-opacity": 0.7,
+            "line-dasharray": [2, 2],
+          },
+          layout: { visibility: "none" },
+        });
+      }
+
       map.addSource("bus-stops", {
         type: "geojson",
         data: asset("/data/bus_stops.geojson"),
@@ -556,6 +583,10 @@ export function MapView({
       if (map.getLayer("rail-stations-label")) {
         map.setLayoutProperty("rail-stations-label", "visibility", stationVisibility);
         map.setFilter("rail-stations-label", includePlanned ? null : ["!=", ["get", "planned"], true]);
+      }
+      const plannedTrackVisibility = isFrequencyMode && includePlanned ? "visible" : "none";
+      for (const id of ["rail-planned-portishead-line", "rail-planned-henbury-line"]) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", plannedTrackVisibility);
       }
       if (map.getLayer("travel-surface-layer")) {
         map.setLayoutProperty(

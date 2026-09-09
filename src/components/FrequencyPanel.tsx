@@ -1,12 +1,6 @@
 import { lines, stations, stationsById } from "../data/rail-service";
-import {
-  ALL_DAY_TYPES,
-  ALL_DAYPARTS,
-  DAY_TYPE_LABELS,
-  DAYPART_LABELS,
-  type DayType,
-  type Daypart,
-} from "../types/rail";
+import type { DayType, Daypart } from "../types/rail";
+import { dayTypeGroups, daypartBands } from "../lib/serviceBands";
 import { CONTOUR_MINUTES, MAX_MINUTES, RAMP, SURFACE_ALPHA_RANGE, WALK_WEIGHT } from "../lib/travelSurface";
 import { buildRampLut, rampGradientStops } from "../lib/colorRamp";
 
@@ -49,8 +43,17 @@ export function FrequencyPanel({
     .filter((s) => s.crs || includePlanned)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const linesInPlay = lines.filter((l) => includePlanned || l.serviceStatus !== "planned");
+
+  // Day and time options are derived from the timetable data rather than listed, so a pill
+  // only appears where the frequency actually changes — see lib/serviceBands.ts.
+  const dayGroups = dayTypeGroups(linesInPlay);
+  const activeDayGroup = dayGroups.find((g) => g.dayTypes.includes(dayType)) ?? dayGroups[0];
+  const bands = daypartBands(linesInPlay, activeDayGroup.dayTypes[0]);
+  const activeBand = bands.find((b) => b.dayparts.includes(daypart)) ?? bands[0];
+
   const originLines = originId
-    ? lines.filter((l) => l.stations.includes(originId) && (includePlanned || l.serviceStatus !== "planned"))
+    ? linesInPlay.filter((l) => l.stations.includes(originId))
     : [];
   const daypartHasService = (dp: Daypart) => originLines.some((l) => l.headways[dayType][dp] !== null);
 
@@ -95,39 +98,42 @@ export function FrequencyPanel({
       <section className="filter-section">
         <h2>Day</h2>
         <div className="status-pills">
-          {ALL_DAY_TYPES.map((dt) => (
-            <button
-              key={dt}
-              type="button"
-              className={"status-pill" + (dayType === dt ? "" : " status-pill--inactive")}
-              style={dayType === dt ? { backgroundColor: "#2a78d6" } : undefined}
-              onClick={() => onDayType(dt)}
-              aria-pressed={dayType === dt}
-            >
-              {DAY_TYPE_LABELS[dt]}
-            </button>
-          ))}
+          {dayGroups.map((group) => {
+            const active = group === activeDayGroup;
+            return (
+              <button
+                key={group.label}
+                type="button"
+                className={"status-pill" + (active ? "" : " status-pill--inactive")}
+                style={active ? { backgroundColor: "#2a78d6" } : undefined}
+                onClick={() => onDayType(group.dayTypes[0])}
+                aria-pressed={active}
+              >
+                {group.label}
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="filter-section">
         <h2>Time of day</h2>
         <div className="status-pills">
-          {ALL_DAYPARTS.map((dp) => {
-            const active = daypart === dp;
-            const hasService = daypartHasService(dp);
+          {bands.map((band) => {
+            const active = band === activeBand;
+            const hasService = daypartHasService(band.dayparts[0]);
             return (
               <button
-                key={dp}
+                key={band.label}
                 type="button"
                 className={"status-pill" + (active ? "" : " status-pill--inactive")}
                 style={active ? { backgroundColor: "#2a78d6" } : undefined}
-                onClick={() => onDaypart(dp)}
+                onClick={() => onDaypart(band.dayparts[0])}
                 aria-pressed={active}
                 disabled={!hasService}
                 title={hasService ? undefined : "No service from this station in this band"}
               >
-                {DAYPART_LABELS[dp]}
+                {band.label}
               </button>
             );
           })}

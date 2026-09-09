@@ -91,11 +91,21 @@ const metrobusRelations = {
 // it, so this matches individual ways by Network Rail's line code (ref=POD)
 // rather than a name search, which also picks up the disused/adjacent Weston,
 // Clevedon & Portishead Light Railway (ref=WCA). Includes railway=rail and
-// railway=construction (track currently being relaid for reopening).
+// railway=construction (track currently being relaid for reopening), plus
+// railway=disused: the branch has been out of use for decades and the stretch
+// approaching Portishead is still tagged that way ahead of relaying.
+//
+// One hand-picked way on top of that. The final ~1 km into the Portishead
+// station site is way 1052310693, which is railway=construction but carries no
+// ref at all, so the ref=POD filter drops it and the corridor stops short of
+// the station the line is being reopened to serve. Re-check this id if the
+// approach is ever retagged.
+const portisheadFinalApproachWayId = 1052310693;
 const portisheadLineQuery = `
 [out:json][timeout:60];
 (
-  way["ref"="POD"]["railway"~"rail|construction"](51.40,-2.80,51.51,-2.50);
+  way["ref"="POD"]["railway"~"rail|construction|disused"](51.40,-2.80,51.51,-2.50);
+  way(id:${portisheadFinalApproachWayId});
 );
 out geom;
 `;
@@ -377,10 +387,17 @@ out geom;
 // stations and halts only, excluding freight-only yards; "usage"!="tourism" drops heritage-railway
 // stops that aren't part of the National Rail network. Same wide bbox as rail-network so it also
 // catches Bath Spa, Weston-super-Mare and Yate.
+//
+// The proposed:/construction: variants pick up the MetroWest stations that don't exist yet
+// (Portishead, Pill, Henbury, North Filton/Bristol Brabazon). Mappers have surveyed those sites
+// onto the alignment, which beats reading a position off a scheme's publicity map — an unbuilt
+// station guessed by hand lands hundreds of metres off the track it is supposed to sit on.
 const railStationsQuery = `
 [out:json][timeout:60];
 (
   node["railway"~"^(station|halt)$"]["usage"!="tourism"](51.30,-2.85,51.62,-2.30);
+  node["proposed:railway"~"^(station|halt)$"](51.30,-2.85,51.62,-2.30);
+  node["construction:railway"~"^(station|halt)$"](51.30,-2.85,51.62,-2.30);
 );
 out body;
 `;
@@ -391,7 +408,15 @@ function nodesToGeoJSON(elements) {
     type: "FeatureCollection",
     features: nodes.map((n) => ({
       type: "Feature",
-      properties: { osm_id: n.id, name: n.tags?.name, ref: n.tags?.ref },
+      properties: {
+        osm_id: n.id,
+        // Unbuilt stations carry their name under proposed:name (the Brabazon node has no
+        // plain name tag at all), and won't have a CRS code allocated until they open.
+        name: n.tags?.name ?? n.tags?.["proposed:name"],
+        ref: n.tags?.ref,
+        crs: n.tags?.["ref:crs"] ?? n.tags?.["proposed:ref:crs"],
+        status: n.tags?.railway ? "open" : "planned",
+      },
       geometry: { type: "Point", coordinates: [n.lon, n.lat] },
     })),
   };
