@@ -61,7 +61,7 @@ export function FrequencyPanel({
   return (
     <div className="frequency-panel">
       <p className="frequency-intro">
-        Map displaying journey times if you just missed the last train. Increase the train
+        Map displaying journey times if you just missed the train. Increase the train
         frequency to see how this can form the basis of Bristol's mass transit network.
       </p>
 
@@ -82,6 +82,33 @@ export function FrequencyPanel({
             </option>
           ))}
         </select>
+      </section>
+
+      <section className="filter-section">
+        <h2>What if it were frequent?</h2>
+        <div className="status-pills">
+          {OVERRIDE_OPTIONS.map((minutes) => (
+            <button
+              key={minutes}
+              type="button"
+              className={"status-pill" + (headwayOverride === minutes ? "" : " status-pill--inactive")}
+              style={headwayOverride === minutes ? { backgroundColor: "#2a78d6" } : undefined}
+              onClick={() => onHeadwayOverride(minutes)}
+              aria-pressed={headwayOverride === minutes}
+            >
+              Every {minutes} min
+            </button>
+          ))}
+          <button
+            type="button"
+            className={"status-pill" + (headwayOverride === null ? "" : " status-pill--inactive")}
+            style={headwayOverride === null ? { backgroundColor: "#2a78d6" } : undefined}
+            onClick={() => onHeadwayOverride(null)}
+            aria-pressed={headwayOverride === null}
+          >
+            Current frequency
+          </button>
+        </div>
       </section>
 
       <section className="filter-section">
@@ -126,33 +153,6 @@ export function FrequencyPanel({
               </button>
             );
           })}
-        </div>
-      </section>
-
-      <section className="filter-section">
-        <h2>What if it were frequent?</h2>
-        <div className="status-pills">
-          {OVERRIDE_OPTIONS.map((minutes) => (
-            <button
-              key={minutes}
-              type="button"
-              className={"status-pill" + (headwayOverride === minutes ? "" : " status-pill--inactive")}
-              style={headwayOverride === minutes ? { backgroundColor: "#2a78d6" } : undefined}
-              onClick={() => onHeadwayOverride(minutes)}
-              aria-pressed={headwayOverride === minutes}
-            >
-              Every {minutes} min
-            </button>
-          ))}
-          <button
-            type="button"
-            className={"status-pill" + (headwayOverride === null ? "" : " status-pill--inactive")}
-            style={headwayOverride === null ? { backgroundColor: "#2a78d6" } : undefined}
-            onClick={() => onHeadwayOverride(null)}
-            aria-pressed={headwayOverride === null}
-          >
-            Current frequency
-          </button>
         </div>
       </section>
 
