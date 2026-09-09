@@ -1,14 +1,7 @@
 import { lines, stations, stationsById } from "../data/rail-service";
 import type { DayType, Daypart } from "../types/rail";
 import { dayTypeGroups, daypartBands } from "../lib/serviceBands";
-import { CONTOUR_MINUTES, MAX_MINUTES, RAMP, SURFACE_ALPHA_RANGE, WALK_WEIGHT } from "../lib/travelSurface";
-import { buildRampLut, rampGradientStops } from "../lib/colorRamp";
-
-const RAMP_LUT = buildRampLut(RAMP, MAX_MINUTES);
-// Alpha matches the map's, not full opacity, so the legend reads the same weight as the surface.
-const RAMP_GRADIENT = `linear-gradient(90deg, ${rampGradientStops(RAMP_LUT, 24, SURFACE_ALPHA_RANGE)
-  .map((stop) => `${stop.color} ${stop.pct.toFixed(1)}%`)
-  .join(", ")})`;
+import { MAX_MINUTES, WALK_WEIGHT } from "../lib/travelSurface";
 
 const OVERRIDE_OPTIONS = [10, 15, 20, 30];
 
@@ -173,42 +166,6 @@ export function FrequencyPanel({
           <input type="checkbox" checked={includePlanned} onChange={onToggleIncludePlanned} />
           Include planned MetroWest lines (Portishead, Henbury)
         </label>
-      </section>
-
-      <section className="filter-section">
-        <h2>Legend</h2>
-        <div className="frequency-legend">
-          <div className="frequency-ramp" style={{ backgroundImage: RAMP_GRADIENT }}>
-            {CONTOUR_MINUTES.map((minutes) => (
-              <span
-                key={minutes}
-                className="frequency-ramp-tick"
-                style={{ left: `${(minutes / MAX_MINUTES) * 100}%` }}
-              />
-            ))}
-          </div>
-          <div className="frequency-ramp-labels">
-            {[0, ...CONTOUR_MINUTES, MAX_MINUTES].map((minutes) => (
-              <span
-                key={minutes}
-                style={{
-                  left: `${(minutes / MAX_MINUTES) * 100}%`,
-                  transform: minutes === 0 ? "none" : minutes === MAX_MINUTES ? "translateX(-100%)" : "translateX(-50%)",
-                }}
-              >
-                {minutes}
-              </span>
-            ))}
-          </div>
-          <p className="frequency-ramp-note">
-            Walking counts {WALK_WEIGHT}× a minute on the train — 30 minutes on foot alone scores
-            {" "}{Math.round(30 * WALK_WEIGHT)}, on the same scale as the train ride above.
-          </p>
-          <span className="legend-swatch legend-swatch--muted">
-            <i />
-            Off the scale entirely, once walking is counted
-          </span>
-        </div>
       </section>
 
       {originId && (

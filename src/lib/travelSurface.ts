@@ -51,12 +51,6 @@ const CONTOUR_ALPHA_BOOST = 0.05;
 // full opacity.
 export const SURFACE_ALPHA_RANGE: [number, number] = [0.55, 0.85];
 const [ALPHA_NEAR, ALPHA_FAR] = SURFACE_ALPHA_RANGE;
-// Every catchment fades out over the last few points of score before MAX_MINUTES, rather than
-// stopping dead at a walk cap — so neighbouring catchments merge into a continuous dark field
-// instead of meeting at a hard rim.
-const EDGE_FADE_MINUTES = 8;
-
-const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 const KM_PER_DEGREE_LAT = 111.32;
 
@@ -123,6 +117,19 @@ function computeBounds(arrivals: Map<string, number>): LngLatBounds {
   };
 }
 
+// The rendered surface must cover at least the visible map, or panning past the stations'
+// own padded bounds would hit bare basemap even though every pixel there is still (further
+// than) off the scale. Widening to the envelope of both keeps every station's full catchment
+// AND whatever's currently on screen.
+function unionBounds(a: LngLatBounds, b: LngLatBounds): LngLatBounds {
+  return {
+    west: Math.min(a.west, b.west),
+    south: Math.min(a.south, b.south),
+    east: Math.max(a.east, b.east),
+    north: Math.max(a.north, b.north),
+  };
+}
+
 // Target ground resolution, independently clamped per axis. A fixed grid size either wastes
 // resolution on a small extent (Clifton Down) or gets blocky on a large one (Severn Beach) — this
 // keeps pixels roughly the same size on the ground across both, while the clamp keeps the array
@@ -169,9 +176,14 @@ export interface TravelSurface {
  * Rendered by scattering from each station into its own capped pixel window rather than scanning
  * every pixel against every station — with a station-specific reach the window is small, so this
  * is orders of magnitude cheaper than the full pixel x station scan an unbounded field would need.
+ *
+ * `viewBounds`, when given, is unioned into the render extent so the surface always covers the
+ * current map view (see `unionBounds`) — every pixel that ends up outside every catchment is then
+ * filled solid in the ramp's own darkest red rather than left bare, so there's no edge where the
+ * surface just stops; it reads as "off the scale", not "unmeasured".
  */
-export function renderSurface(arrivals: Map<string, number>): TravelSurface {
-  const bounds = computeBounds(arrivals);
+export function renderSurface(arrivals: Map<string, number>, viewBounds?: LngLatBounds): TravelSurface {
+  const bounds = viewBounds ? unionBounds(computeBounds(arrivals), viewBounds) : computeBounds(arrivals);
   const { width, height } = gridDimensions(bounds);
   const stationList = Array.from(arrivals.entries())
     .map(([id, arrival]) => ({ coordinates: stationsById[id]?.coordinates, arrival }))
@@ -238,8 +250,16 @@ export function renderSurface(arrivals: Map<string, number>): TravelSurface {
       const idx = row * width + col;
       const score = best[idx];
       const pixel = idx * 4;
-      if (!Number.isFinite(score) || score > MAX_MINUTES) {
-        data[pixel + 3] = 0;
+      if (!Number.isFinite(score)) {
+        // Outside every station's own catchment — further than the worst thing the ramp
+        // measures, not "no data". Solid in the ramp's own darkest red (RAMP's design intent is
+        // for slow places to "smother the basemap"; this is that carried to its limit) rather
+        // than a hole of transparent basemap wherever the surface extends past the last catchment.
+        const lastStop = (RAMP_LUT_SIZE - 1) * 3;
+        data[pixel] = RAMP_LUT[lastStop];
+        data[pixel + 1] = RAMP_LUT[lastStop + 1];
+        data[pixel + 2] = RAMP_LUT[lastStop + 2];
+        data[pixel + 3] = Math.round(ALPHA_FAR * 255);
         continue;
       }
 
@@ -248,8 +268,10 @@ export function renderSurface(arrivals: Map<string, number>): TravelSurface {
       let g = RAMP_LUT[lutIndex + 1];
       let b = RAMP_LUT[lutIndex + 2];
 
-      const feather = smoothstep(Math.min(1, Math.max(0, (MAX_MINUTES - score) / EDGE_FADE_MINUTES)));
-      let alpha = (ALPHA_NEAR + (ALPHA_FAR - ALPHA_NEAR) * Math.min(1, score / MAX_MINUTES)) * feather;
+      // No edge fade: a catchment's own outer edge now hands off directly to the off-scale fill
+      // above (same darkest colour, same ALPHA_FAR), so alpha just rises to that value rather
+      // than dipping back toward transparent right where it would otherwise meet solid colour.
+      let alpha = ALPHA_NEAR + (ALPHA_FAR - ALPHA_NEAR) * Math.min(1, score / MAX_MINUTES);
 
       // Local gradient magnitude, from forward differences — used to keep contour lines a
       // roughly constant ~1px wide in grid space rather than ballooning across flat stretches of
@@ -268,9 +290,7 @@ export function renderSurface(arrivals: Map<string, number>): TravelSurface {
         r *= darken;
         g *= darken;
         b *= darken;
-        // Faded by the same feather as the base alpha: without this, a catchment rim that lands
-        // on a contour would draw a hard ring straight through the fade meant to soften it.
-        alpha = Math.min(0.92, alpha + CONTOUR_ALPHA_BOOST * line * feather);
+        alpha = Math.min(0.92, alpha + CONTOUR_ALPHA_BOOST * line);
       }
 
       data[pixel] = r;

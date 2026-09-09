@@ -7,6 +7,7 @@ import { asset } from "../lib/asset";
 import type { SidebarMode } from "./Sidebar";
 import { stations as railStations, stationsById } from "../data/rail-service";
 import { renderSurface, type LngLatBounds, type TravelSurface } from "../lib/travelSurface";
+import { FrequencyLegend } from "./FrequencyLegend";
 
 const BRISTOL_CENTER: [number, number] = [-2.5879, 51.4545];
 
@@ -115,6 +116,10 @@ export function MapView({
   const corridorLayerIdsRef = useRef<Record<string, string[]>>({});
   const surfaceRef = useRef<TravelSurface | null>(null);
   const surfacePopupRef = useRef<maplibregl.Popup | null>(null);
+  // Holds the latest "recompute and repaint the surface for the current viewport" closure, kept
+  // current by the arrivals effect below and invoked both from there and from the map's own
+  // moveend handler (registered once at mount, so it can't close over a fresh `arrivals` itself).
+  const redrawSurfaceRef = useRef<() => void>(() => {});
   // Corridor layers are built asynchronously (after their geometry fetches resolve), so
   // their initial visibility can't just read the `mode` prop from the mount effect's
   // closure — that would freeze at whatever mode was active on first render. A ref kept
@@ -368,6 +373,14 @@ export function MapView({
           .addTo(map);
       });
       map.on("mouseout", () => surfacePopup.remove());
+
+      // Keep the surface covering the view as the user pans/zooms — it's sized to the union of
+      // the stations' own catchments and the viewport (see renderSurface), so panning away from
+      // the origin would otherwise run off the edge of a box sized only for the catchments.
+      map.on("moveend", () => {
+        if (modeRef.current !== "frequency") return;
+        redrawSurfaceRef.current();
+      });
 
       // Corridor / boundary highlight layers, one per project that has geometry.
       // Fetched in parallel but added in a fixed order (all area fills first,
@@ -636,21 +649,32 @@ export function MapView({
     ]);
   }, [originId]);
 
-  // Redraw the travel-time surface whenever the origin or its options change.
+  // Redraw the travel-time surface whenever the origin or its options change, and refresh the
+  // closure the map's moveend handler calls — the surface must also cover wherever the view pans
+  // or zooms to next, not just where it was when `arrivals` last changed.
   useEffect(() => {
-    const map = mapRef.current;
-    const source = map?.getSource("travel-surface") as maplibregl.ImageSource | undefined;
-    if (!map || !source) return;
-    if (!arrivals) {
-      surfaceRef.current = null;
-      return;
-    }
-    const surface = renderSurface(arrivals);
-    surfaceRef.current = surface;
-    source.updateImage({
-      image: surface.image,
-      coordinates: boundsToImageCoordinates(surface.bounds),
-    });
+    redrawSurfaceRef.current = () => {
+      const map = mapRef.current;
+      const source = map?.getSource("travel-surface") as maplibregl.ImageSource | undefined;
+      if (!map || !source) return;
+      if (!arrivals) {
+        surfaceRef.current = null;
+        return;
+      }
+      const b = map.getBounds();
+      const surface = renderSurface(arrivals, {
+        west: b.getWest(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        north: b.getNorth(),
+      });
+      surfaceRef.current = surface;
+      source.updateImage({
+        image: surface.image,
+        coordinates: boundsToImageCoordinates(surface.bounds),
+      });
+    };
+    redrawSurfaceRef.current();
   }, [arrivals]);
 
   useEffect(() => {
@@ -720,5 +744,10 @@ export function MapView({
     }
   }, [selectedId, projects]);
 
-  return <div ref={containerRef} className="map-view" />;
+  return (
+    <div className="map-view">
+      <div ref={containerRef} className="map-canvas" />
+      {isFrequencyMode && arrivals && <FrequencyLegend />}
+    </div>
+  );
 }

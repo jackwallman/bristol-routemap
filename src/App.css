@@ -261,25 +261,6 @@
   color: var(--text);
 }
 
-.legend-swatch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-swatch i {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.legend-swatch--muted i {
-  background: none;
-  border: 1px dashed var(--border);
-}
-
 .frequency-ramp {
   position: relative;
   height: 14px;
@@ -472,6 +453,24 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.map-legend {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  max-width: min(280px, calc(100% - 32px));
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 12px;
+  box-shadow: var(--shadow);
 }
 
 .map-marker {
