@@ -54,7 +54,7 @@ export function FrequencyLegend() {
           <Axis values={TRANSIT_TICKS} />
           <span className="frequency-key-label">transit/waiting time</span>
         </div>
-        <p className="frequency-ramp-note">Map colors: combined walking, transit, and waiting time.</p>
+        <p className="frequency-ramp-note">Map colors: combined walking and transit.</p>
       </div>
     </div>
   );

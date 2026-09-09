@@ -1,9 +1,9 @@
 import { lines, stations, stationsById } from "../data/rail-service";
 import type { DayType, Daypart } from "../types/rail";
 import { dayTypeGroups, daypartBands } from "../lib/serviceBands";
-import { MAX_MINUTES, WALK_WEIGHT } from "../lib/travelSurface";
+import { MAX_MINUTES } from "../lib/travelSurface";
 
-const OVERRIDE_OPTIONS = [10, 15, 20, 30];
+const OVERRIDE_OPTIONS = [5, 10, 15, 20, 30];
 
 interface FrequencyPanelProps {
   originId: string | null;
@@ -61,12 +61,8 @@ export function FrequencyPanel({
   return (
     <div className="frequency-panel">
       <p className="frequency-intro">
-        Pick a station and imagine you just missed your train by 30 seconds. This shows how long
-        it then takes to reach everywhere else — riding one train, optionally changing once, then
-        walking the rest of the way at a normal pace. Walking counts for more than riding —
-        {" "}{WALK_WEIGHT}× a minute on the train — since a place you can only reach on foot isn't
-        genuinely "10 minutes away" the way a train stop is. On an infrequent line, the wait can
-        matter more than the ride.
+        Map displaying journey times if you just missed the last train. Increase the train
+        frequency to see how this can form the basis of Bristol's mass transit network.
       </p>
 
       <section className="filter-section">
@@ -135,30 +131,29 @@ export function FrequencyPanel({
 
       <section className="filter-section">
         <h2>What if it were frequent?</h2>
-        <label className="filter-row">
-          <input
-            type="checkbox"
-            checked={headwayOverride !== null}
-            onChange={() => onHeadwayOverride(headwayOverride !== null ? null : 15)}
-          />
-          Override every running line's headway
-        </label>
-        {headwayOverride !== null && (
-          <div className="headway-options">
-            {OVERRIDE_OPTIONS.map((minutes) => (
-              <button
-                key={minutes}
-                type="button"
-                className={"status-pill" + (headwayOverride === minutes ? "" : " status-pill--inactive")}
-                style={headwayOverride === minutes ? { backgroundColor: "#2a78d6" } : undefined}
-                onClick={() => onHeadwayOverride(minutes)}
-                aria-pressed={headwayOverride === minutes}
-              >
-                Every {minutes} min
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="status-pills">
+          {OVERRIDE_OPTIONS.map((minutes) => (
+            <button
+              key={minutes}
+              type="button"
+              className={"status-pill" + (headwayOverride === minutes ? "" : " status-pill--inactive")}
+              style={headwayOverride === minutes ? { backgroundColor: "#2a78d6" } : undefined}
+              onClick={() => onHeadwayOverride(minutes)}
+              aria-pressed={headwayOverride === minutes}
+            >
+              Every {minutes} min
+            </button>
+          ))}
+          <button
+            type="button"
+            className={"status-pill" + (headwayOverride === null ? "" : " status-pill--inactive")}
+            style={headwayOverride === null ? { backgroundColor: "#2a78d6" } : undefined}
+            onClick={() => onHeadwayOverride(null)}
+            aria-pressed={headwayOverride === null}
+          >
+            Current frequency
+          </button>
+        </div>
       </section>
 
       <section className="filter-section">

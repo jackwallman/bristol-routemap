@@ -318,10 +318,12 @@ export function MapView({
         },
         filter: ["!=", ["get", "planned"], true],
       });
-      map.on("click", "rail-stations-point", (e) => {
+      const selectStationFromFeature = (e: maplibregl.MapLayerMouseEvent) => {
         const id = e.features?.[0]?.properties?.id;
         if (id) onSelectOrigin(id);
-      });
+      };
+      map.on("click", "rail-stations-point", selectStationFromFeature);
+      map.on("click", "rail-stations-label", selectStationFromFeature);
 
       const firstSymbolLayerId = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
       map.addSource("travel-surface", {
