@@ -370,7 +370,7 @@ export const projects: Project[] = [
       },
     ],
     lastUpdated: "2026-08-18",
-    coordinates: [-2.3980, 51.6825],
+    coordinates: [-2.3993, 51.6276],
   },
   {
     id: "m1-metrobus-extension",
